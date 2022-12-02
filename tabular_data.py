@@ -29,10 +29,15 @@ def clean_tabular_data(df):
     df = remove_rows_with_missing_ratings(df)
     df = combine_description_strings(df)
     df = set_default_feature_value(df)
+    df = df.reset_index(drop=True)
     return df
 
 if __name__ == "__main__":
+
+    df_clean = pd.read_csv(r'./airbnb-property-listings/tabular_data/clean_listing.csv')
+    print(df_clean.head())
     df = pd.read_csv(r'./airbnb-property-listings/tabular_data/listing.csv')
 
     df = clean_tabular_data(df)
-    df.to_csv(r'./airbnb-property-listings/tabular_data/clean_listing.csv')  
+
+    df.to_csv(r'./airbnb-property-listings/tabular_data/clean_listing.csv', index=False)

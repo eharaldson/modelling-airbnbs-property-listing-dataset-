@@ -1,6 +1,9 @@
+from ast import literal_eval
+
 import pandas as pd
 import numpy as np
-from ast import literal_eval
+
+import os
 
 def remove_rows_with_missing_ratings(df_null):
     df_null = df_null.iloc[:,:-1]
@@ -32,12 +35,15 @@ def clean_tabular_data(df):
     df = df.reset_index(drop=True)
     return df
 
+def load_airbnb(label_name):
+    cwd = os.getcwd()
+    df = pd.read_csv(os.path.join(cwd, 'data/tabular_data/clean_listing.csv'), index_col='ID').select_dtypes('number')
+    labels = df[[label_name]]
+    features = df.drop(label_name, axis=1)
+    return (features, labels)
+
 if __name__ == "__main__":
+    X, y = load_airbnb('Price_Night')
 
-    df_clean = pd.read_csv(r'./airbnb-property-listings/tabular_data/clean_listing.csv')
-    print(df_clean.head())
-    df = pd.read_csv(r'./airbnb-property-listings/tabular_data/listing.csv')
-
-    df = clean_tabular_data(df)
-
-    df.to_csv(r'./airbnb-property-listings/tabular_data/clean_listing.csv', index=False)
+    X.info()
+    y.info()

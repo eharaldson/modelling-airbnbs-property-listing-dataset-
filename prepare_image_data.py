@@ -58,4 +58,4 @@ def prepare_images():
     resize_images()
 
 if __name__ == "__main__":
-    resize_images()
+    prepare_images()

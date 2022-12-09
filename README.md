@@ -1,11 +1,13 @@
-### Modelling airbnbs listings dataset
+# Modelling airbnbs listings dataset
 
 ## Data preparation
-# Tabular data
+### Tabular data
 - In the tabular_data file I have created functions to clean the airbnb table data. The functions could be reused for similar tabular data. The tabular data has 988 samples and 20 columns as seen when using `df.info()`:
+
 ![alt text](./readme_images/listing_info.png)
 
 - The output from `df.head()` is seen below:
+
 ![alt text](./readme_images/listing_head.png)
 
 - Three key steps were completed to clean the tabular data.
@@ -39,7 +41,7 @@
         return df.copy()
     ```
 
-# Images
+### Images
 - The images for the airbnb property samples were prepared in the prepare_image_data.py file. In this file the images were downloaded from the cloud (an s3 bucket from AWS) and placed in a folder. The function used to do this is seen below:
 ```
 def download_images():

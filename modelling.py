@@ -4,26 +4,33 @@ from sklearn import linear_model, model_selection, metrics, preprocessing
 import numpy as np
 np.random.seed(20)
 
-X, y = load_airbnb()    # Load data
+# Load data
+X, y = load_airbnb()
 X = np.array(X)
 y = np.array(y).reshape(-1)
 
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)    # Split data into train, validation and test data
+# Split data into train, validation and test data
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
 X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=0.2)
 
-scaler = preprocessing.StandardScaler().fit(X_train)    # Set up a scaler to standardize data
+# Set up a scaler to standardize data
+scaler = preprocessing.StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
-X_test = scaler.transform(X_test)
 X_val = scaler.transform(X_val)
+X_test = scaler.transform(X_test)
 
-model = linear_model.SGDRegressor()   # Set up SGD (Stochastic gradient descent) linear regression model
+# Set up linear regression model and fit to the data
+model = linear_model.LinearRegression()
 model.fit(X_train, y_train)
 
-print(model.score(X_val, y_val))
+# Print R2 score on validation dataset
+print(f'R^2 score: {model.score(X_val, y_val)}')
 print()
 
-predictions = model.predict(X_test)
-
-print(predictions[:5])
+# Print RMSE score on validation dataset
+y_hat = model.predict(X_val)
+print(f'RMSE score: {metrics.mean_squared_error(y_val, y_hat, squared=False)}')
 print()
-print(y_test[:5])
+
+print(y_val)
+print(y_hat)

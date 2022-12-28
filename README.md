@@ -96,3 +96,16 @@ def resize_images():
             os.makedirs(processed_img_dir)
         new_image.save(os.path.join(processed_img_dir, file_path[1]))
 ```
+
+## Regression
+# Linear Regression
+
+- In this section of the project I am fitting a linear regression model to the airbnb dataset to predict nightly price. 
+
+- A first baseline model was created as a simple sklearn linear regression model without regularization which produced a root mean squared error of 115.95 on the validation dataset.
+
+- After this a grid search over the hyperparameters: penalty, alpha and max_iter was completed using sklearn's GridSearchCV module. This grid search therefore looked at both Linear regression models with no regularization, L1 regularization, and L2 regularization. The best model produced from this Cross-Validation search was a Ridge regression model with alpha = 0.1 and 100000 iterations. The mean RMSE score on the validation sets was 102.43, this result was better than that without regularization which is to be expected since the regularization increases the generalization of the model.
+
+- The best linear regression model and its score metrics were saved in files in the model/regression/linear_regression folder to be able to compare to future models. 
+
+- The RMSE score however is very high and it gave only and R^2 score of ~0.445 which is not a very good fit. Therefore, I hope to see an improvement when looking at other regression models (non-linear).

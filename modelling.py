@@ -4,6 +4,11 @@ from sklearn import linear_model, model_selection, metrics, preprocessing
 import numpy as np
 np.random.seed(20)
 
+# Completes cross validation of a model on different parameters and returns the best model
+def custom_tune_regression_model_hyperparameters(model_class, X_train, y_train, X_val, y_val, X_test, y_test, parameter_dictionary):
+
+    pass
+
 # Load data
 X, y = load_airbnb()
 X = np.array(X)

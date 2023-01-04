@@ -126,7 +126,7 @@ def random_forest_CV(X_train, y_train, X_test, y_test):
     save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
 
 # Function for running GridSearchCV for decision tree regressor
-def random_forest_CV(X_train, y_train, X_test, y_test):
+def decision_tree_CV(X_train, y_train, X_test, y_test):
     hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
                     'max_depth': [1, 5, 25, 50, 100, 200]}
     estimator = tree.DecisionTreeRegressor()
@@ -142,43 +142,29 @@ def sgd_regressor_CV(X_train, y_train, X_test, y_test):
     model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, y_train, X_test, y_test, hyperparameters)
     save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)    
 
+# Function for running GridSearchCV on all the regression models
+def regression_tests(X_train, y_train, X_test, y_test):
+    
+    # Run the regression models and save the best one after cross validation
+    sgd_regressor_CV(X_train, y_train, X_test, y_test)
+    decision_tree_CV(X_train, y_train, X_test, y_test)
+    random_forest_CV(X_train, y_train, X_test, y_test)
+    gradientboost_CV(X_train, y_train, X_test, y_test)
+    adaboost_CV(X_train, y_train, X_test, y_test)
 
-# Load data
-X, y = load_airbnb()
-X = np.array(X)
-y = np.array(y).reshape(-1)
+if __name__ == "__main__":
 
-# Split data into train, validation and test data
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
+    # Load data
+    X, y = load_airbnb()
+    X = np.array(X)
+    y = np.array(y).reshape(-1)
 
-# Set up a scaler to standardize data
-scaler = preprocessing.StandardScaler().fit(X_train)
-X_train = scaler.transform(X_train)
-X_test = scaler.transform(X_test)
+    # Split data into train, validation and test data
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
 
+    # Set up a scaler to standardize data
+    scaler = preprocessing.StandardScaler().fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
 
-''' 
-## Model 2: SGDRegressor =>
-hyperparameters = {'penalty': ['l1', 'l2'],
-                    'alpha': [10, 1, 0.1, 0.001, 0.0001, 0.00001, 0],
-                    'max_iter': [1000, 10000, 100000, 1000000]}
-
-estimators = linear_model.SGDRegressor()
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, y_train, X_test, y_test, hyperparameters)
-print(model)
-
-save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)
-'''
-
-
-
-
-## Model 1: LinearRegression =>
-''' 
-# Load data
-
-# Set up linear regression model and fit to the data
-model = linear_model.LinearRegression()
-model.fit(X_train, y_train)
-'''
+    regression_tests(X_train, y_train, X_test, y_test)

@@ -6,6 +6,7 @@ import os
 import json
 import pickle
 import numpy as np
+
 np.random.seed(20)
 
 # Completes cross validation of a model on different parameters and returns the best model
@@ -143,8 +144,8 @@ def sgd_regressor_CV(X_train, y_train, X_test, y_test):
     save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)    
 
 # Function for running GridSearchCV on all the regression models
-def regression_tests(X_train, y_train, X_test, y_test):
-    
+def evaluate_all_models(X_train, y_train, X_test, y_test):
+
     # Run the regression models and save the best one after cross validation
     sgd_regressor_CV(X_train, y_train, X_test, y_test)
     decision_tree_CV(X_train, y_train, X_test, y_test)
@@ -167,4 +168,4 @@ if __name__ == "__main__":
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    regression_tests(X_train, y_train, X_test, y_test)
+    evaluate_all_models(X_train, y_train, X_test, y_test)

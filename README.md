@@ -133,3 +133,5 @@ RandomForestRegressor(max_depth=200,
                       min_samples_leaf=3,
                       n_estimators=20)
 ```
+
+- There are more regression models I would like to look at such as: support vector machines, bayesian regression and also neural networks (which will ultimately be used later one)

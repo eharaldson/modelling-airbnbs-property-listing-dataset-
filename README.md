@@ -109,3 +109,27 @@ def resize_images():
 - The best linear regression model and its score metrics were saved in files in the model/regression/linear_regression folder to be able to compare to future models. 
 
 - The RMSE score however is very high and it gave only and R^2 score of ~0.445 which is not a very good fit. Therefore, I hope to see an improvement when looking at other regression models (non-linear).
+
+# All regression models
+
+- After running a simple linear regression model it is now time to test other regression techniques.
+
+- To do this the following models were looked at:
+    - SGDRegressor()
+    - AdaBoostRegressor()
+    - GradientBoostingRegressor()
+    - RandomForestRegressor()
+    - DecisionTreeRegressor()
+
+- A cross validation over some important hyperparameters was conducted on each model. The models, metrics and best hyperparameters were saved in individual folders.
+
+- Finally a function was created to find the best model from each of the best models of each algorithm with the best hyperparameters.
+
+- The best model and its hyperparameters was a random forest regressor as seen below...
+
+```
+RandomForestRegressor(max_depth=200, 
+                      max_features='log2', 
+                      min_samples_leaf=3,
+                      n_estimators=20)
+```

@@ -1,5 +1,5 @@
 from tabular_data import load_airbnb
-from sklearn import linear_model, model_selection, metrics, preprocessing, pipeline
+from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble
 from itertools import product
 
 import os
@@ -98,42 +98,8 @@ def save_model(folder, model, model_hyperparameters, model_score_metrics):
     with open(score_filename, 'w') as outfile:
         json.dump(model_score_metrics, outfile)
 
-## Model 2: SGDRegressor =>
-X, y = load_airbnb()
-X = np.array(X)
-y = np.array(y).reshape(-1)
-
-# Split data into train, validation and test data
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
-
-# Set up a scaler to standardize data
-scaler = preprocessing.StandardScaler().fit(X_train)
-X_train = scaler.transform(X_train)
-X_test = scaler.transform(X_test)
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(X_train, y_train, X_test, y_test)
-print(model)
-
-save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Model 1: LinearRegression =>
-''' 
 # Load data
 X, y = load_airbnb()
 X = np.array(X)
@@ -141,38 +107,85 @@ y = np.array(y).reshape(-1)
 
 # Split data into train, validation and test data
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
-X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=0.2)
 
 # Set up a scaler to standardize data
 scaler = preprocessing.StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
-X_val = scaler.transform(X_val)
 X_test = scaler.transform(X_test)
+
+
+'''
+## Model 5: Gradient Boosting =>
+model = ensemble.GradientBoostingRegressor(n_estimators=40)
+model.fit(X_train, y_train)
+
+print(model.score(X_test, y_test))
+'''
+
+
+
+
+
+
+'''
+## Model 4: RandomForestRegressor =>
+
+model = ensemble.RandomForestRegressor(max_depth=4, n_estimators=100)
+model.fit(X_train, y_train)
+
+print(model.score(X_test, y_test))
+# predictions = model.predict(X_test)
+
+# print()
+# print(predictions)
+# print(y_test)
+
+# print()
+# print(metrics.mean_squared_error(y_true=y_test, y_pred=predictions, squared=False))
+'''
+
+
+
+
+'''
+## Model 3: DecisionTreeRegressor =>
+
+model = tree.DecisionTreeRegressor()
+model.fit(X_train, y_train)
+
+print(model.score(X_test, y_test))
+predictions = model.predict(X_test)
+
+print()
+print(predictions)
+print(y_test)
+
+print()
+print(metrics.mean_squared_error(y_true=y_test, y_pred=predictions, squared=False))
+'''
+
+
+
+
+
+
+''' 
+## Model 2: SGDRegressor =>
+
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(X_train, y_train, X_test, y_test)
+print(model)
+
+save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)
+'''
+
+
+
+
+## Model 1: LinearRegression =>
+''' 
+# Load data
 
 # Set up linear regression model and fit to the data
 model = linear_model.LinearRegression()
 model.fit(X_train, y_train)
-
-# Print model coefficients
-print(model.coef_)
-print(model.intercept_)
-print() 
-
-# Print R2 score on validation dataset
-print(f'R^2 score: {model.score(X_val, y_val)}')
-print()
-
-# Print RMSE score on validation dataset
-y_hat = model.predict(X_val)
-print(f'RMSE score: {metrics.mean_squared_error(y_val, y_hat, squared=False)}')
-print()
-
-# Print R2 score on test dataset
-print(f'R^2 score on test: {model.score(X_test, y_test)}')
-print()
-
-# Print RMSE score on test dataset
-y_hat = model.predict(X_test)
-print(f'RMSE score on test: {metrics.mean_squared_error(y_test, y_hat, squared=False)}')
-print()
 '''

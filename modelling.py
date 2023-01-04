@@ -97,6 +97,50 @@ def save_model(folder, model, model_hyperparameters, model_score_metrics):
     with open(score_filename, 'w') as outfile:
         json.dump(model_score_metrics, outfile)
 
+# Function for running GridSearchCV for Adaboost
+def adaboost_CV(X_train, y_train, X_test, y_test):
+    hyperparameters = {'estimator': [tree.DecisionTreeRegressor(), svm.NuSVR(), linear_model.SGDRegressor(), neighbors.KNeighborsRegressor()],
+                   'n_estimators': [5, 20, 40, 80, 150, 250]}
+    estimator = ensemble.AdaBoostRegressor()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    save_model('models/regression/adaboost', model, model_hyperparameters, model_score_metrics)
+
+# Function for running GridSearchCV for gradient boosting
+def gradientboost_CV(X_train, y_train, X_test, y_test):
+    hyperparameters = {'n_estimators': [5, 20, 40, 80, 150, 250],
+                'loss': ['squared_error', 'absolute_error', 'huber', 'quantile'],
+                'learning_rate': [0.5, 1, 5, 10]}
+    estimator = ensemble.GradientBoostingRegressor()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    save_model('models/regression/gradient_boosting', model, model_hyperparameters, model_score_metrics)
+
+# Function for running GridSearchCV for random forest
+def random_forest_CV(X_train, y_train, X_test, y_test):
+    hyperparameters = {'criterion': ["squared_error", "absolute_error", "friedman_mse", "poisson"],
+                    'n_estimators': [5, 20, 50, 100, 200],
+                    'max_depth': [1, 5, 25, 50, 100, 200],
+                    'max_features' : ["sqrt", "log2", None], 
+                    'min_samples_leaf': [1, 2, 3, 4, 5]}
+    estimator = ensemble.RandomForestRegressor()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
+
+# Function for running GridSearchCV for decision tree regressor
+def random_forest_CV(X_train, y_train, X_test, y_test):
+    hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
+                    'max_depth': [1, 5, 25, 50, 100, 200]}
+    estimator = tree.DecisionTreeRegressor()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    save_model('models/regression/decision_tree', model, model_hyperparameters, model_score_metrics)
+
+# Function for running GridSearchCV for sgd regressor
+def sgd_regressor_CV(X_train, y_train, X_test, y_test):
+    hyperparameters = {'penalty': ['l1', 'l2'],
+                        'alpha': [10, 1, 0.1, 0.001, 0.0001, 0.00001, 0],
+                        'max_iter': [1000, 10000, 100000, 1000000]}
+    estimators = linear_model.SGDRegressor()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, y_train, X_test, y_test, hyperparameters)
+    save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)    
 
 
 # Load data
@@ -111,75 +155,6 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_s
 scaler = preprocessing.StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
-
-'''
-## Model 6: AdaBoost =>
-
-hyperparameters = {'estimator': [tree.DecisionTreeRegressor(), svm.NuSVR(), linear_model.SGDRegressor(), neighbors.KNeighborsRegressor()],
-                   'n_estimators': [5, 20, 40, 80, 150, 250]}
-
-estimator = ensemble.AdaBoostRegressor()
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
-
-save_model('models/regression/adaboost', model, model_hyperparameters, model_score_metrics)
-'''
-
-
-
-
-
-
-
-## Model 5: Gradient Boosting =>
-
-hyperparameters = {'n_estimators': [5, 20, 40, 80, 150, 250],
-              'loss': ['squared_error', 'absolute_error', 'huber', 'quantile'],
-              'learning_rate': [0.5, 1, 5, 10]}
-
-estimator = ensemble.GradientBoostingRegressor()
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
-
-save_model('models/regression/gradient_boosting', model, model_hyperparameters, model_score_metrics)
-
-
-
-
-
-
-
-'''
-## Model 4: RandomForestRegressor =>
-
-hyperparameters = {'criterion': ["squared_error", "absolute_error", "friedman_mse", "poisson"],
-                   'n_estimators': [5, 20, 50, 100, 200],
-                   'max_depth': [1, 5, 25, 50, 100, 200],
-                   'max_features' : ["sqrt", "log2", None], 
-                   'min_samples_leaf': [1, 2, 3, 4, 5]}
-
-estimator = ensemble.RandomForestRegressor()
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
-
-save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
-'''
-
-'''
-## Model 3: DecisionTreeRegressor =>
-
-hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
-                   'max_depth': [1, 5, 25, 50, 100, 200]}
-
-estimator = tree.DecisionTreeRegressor()
-
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
-print(model)
-
-save_model('models/regression/decision_tree', model, model_hyperparameters, model_score_metrics)
-'''
-
-
 
 
 ''' 

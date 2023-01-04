@@ -98,7 +98,7 @@ def resize_images():
 ```
 
 ## Regression
-# Linear Regression
+### Linear Regression
 
 - In this section of the project I am fitting a linear regression model to the airbnb dataset to predict nightly price. 
 
@@ -110,7 +110,7 @@ def resize_images():
 
 - The RMSE score however is very high and it gave only and R^2 score of ~0.445 which is not a very good fit. Therefore, I hope to see an improvement when looking at other regression models (non-linear).
 
-# All regression models
+### All regression models
 
 - After running a simple linear regression model it is now time to test other regression techniques.
 

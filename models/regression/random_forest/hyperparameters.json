@@ -1,0 +1,1 @@
+{"criterion": "poisson", "max_depth": 100, "max_features": null, "min_samples_leaf": 5, "n_estimators": 20}

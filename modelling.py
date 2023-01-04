@@ -1,5 +1,5 @@
 from tabular_data import load_airbnb
-from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble
+from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors
 from itertools import product
 
 import os
@@ -64,16 +64,19 @@ def tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y
 
     best_model = clf.best_estimator_
 
-    model_hyperparamters = clf.best_params_
+    model_hyperparameters = clf.best_params_
     validation_rmse_score = -clf.best_score_
 
     y_hat = clf.predict(X_test)
     test_rmse_score = -clf.score(X_test, y_test)
     test_r2_score = metrics.r2_score(y_test, y_hat)
 
+    if 'estimator' in model_hyperparameters.keys():
+        model_hyperparameters['estimator'] = str(model_hyperparameters['estimator'])
+
     best_score_metrics = {'validation_RMSE': validation_rmse_score, 'test_RMSE': test_rmse_score, 'test_R2': test_r2_score}
 
-    return best_model, model_hyperparamters, best_score_metrics
+    return best_model, model_hyperparameters, best_score_metrics
 
 # Function to save model
 def save_model(folder, model, model_hyperparameters, model_score_metrics):
@@ -109,14 +112,37 @@ scaler = preprocessing.StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
 
-
 '''
+## Model 6: AdaBoost =>
+
+hyperparameters = {'estimator': [tree.DecisionTreeRegressor(), svm.NuSVR(), linear_model.SGDRegressor(), neighbors.KNeighborsRegressor()],
+                   'n_estimators': [5, 20, 40, 80, 150, 250]}
+
+estimator = ensemble.AdaBoostRegressor()
+
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+
+save_model('models/regression/adaboost', model, model_hyperparameters, model_score_metrics)
+'''
+
+
+
+
+
+
+
 ## Model 5: Gradient Boosting =>
-model = ensemble.GradientBoostingRegressor(n_estimators=40)
-model.fit(X_train, y_train)
 
-print(model.score(X_test, y_test))
-'''
+hyperparameters = {'n_estimators': [5, 20, 40, 80, 150, 250],
+              'loss': ['squared_error', 'absolute_error', 'huber', 'quantile'],
+              'learning_rate': [0.5, 1, 5, 10]}
+
+estimator = ensemble.GradientBoostingRegressor()
+
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+
+save_model('models/regression/gradient_boosting', model, model_hyperparameters, model_score_metrics)
+
 
 
 
@@ -126,21 +152,18 @@ print(model.score(X_test, y_test))
 '''
 ## Model 4: RandomForestRegressor =>
 
-model = ensemble.RandomForestRegressor(max_depth=4, n_estimators=100)
-model.fit(X_train, y_train)
+hyperparameters = {'criterion': ["squared_error", "absolute_error", "friedman_mse", "poisson"],
+                   'n_estimators': [5, 20, 50, 100, 200],
+                   'max_depth': [1, 5, 25, 50, 100, 200],
+                   'max_features' : ["sqrt", "log2", None], 
+                   'min_samples_leaf': [1, 2, 3, 4, 5]}
 
-print(model.score(X_test, y_test))
-# predictions = model.predict(X_test)
+estimator = ensemble.RandomForestRegressor()
 
-# print()
-# print(predictions)
-# print(y_test)
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
 
-# print()
-# print(metrics.mean_squared_error(y_true=y_test, y_pred=predictions, squared=False))
+save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
 '''
-
-
 
 '''
 ## Model 3: DecisionTreeRegressor =>

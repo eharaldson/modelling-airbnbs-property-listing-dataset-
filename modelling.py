@@ -9,6 +9,7 @@ import numpy as np
 
 np.random.seed(20)
 
+''' Regression '''
 # Completes cross validation of a model on different parameters and returns the best model
 def custom_tune_regression_model_hyperparameters(model_class, X_train, y_train, X_val, y_val, X_test, y_test, parameter_dictionary):
     '''
@@ -194,14 +195,19 @@ def find_best_model():
 
     return best_model, best_hyperparameters, best_metrics
 
+''' Classification '''
+
 
 if __name__ == "__main__":
 
-    # Load data
-    X, y = load_airbnb()
+    # Load data for classification
+    X, y = load_airbnb('Category')
     X = np.array(X)
     y = np.array(y).reshape(-1)
 
+    print(X[:5,:])
+    print()
+    print(y[:5])
     # Split data into train, validation and test data
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
 
@@ -210,12 +216,4 @@ if __name__ == "__main__":
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    evaluate_all_models(X_train, y_train, X_test, y_test)
 
-    best_model, best_hyperparameters, best_metrics = find_best_model()
-
-    print(best_metrics)
-    print()
-    print(best_model)
-    print()
-    print(best_hyperparameters)

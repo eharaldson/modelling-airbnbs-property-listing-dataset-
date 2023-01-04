@@ -37,9 +37,9 @@ def clean_tabular_data(df):
 
 def load_airbnb(label_name='Price_Night'):
     cwd = os.getcwd()
-    df = pd.read_csv(os.path.join(cwd, 'data/tabular_data/clean_listing.csv'), index_col='ID').select_dtypes('number')
+    df = pd.read_csv(os.path.join(cwd, 'data/tabular_data/clean_listing.csv'), index_col='ID')
     labels = df[[label_name]]
-    features = df.drop(label_name, axis=1)
+    features = df.drop(label_name, axis=1).select_dtypes('number')
     return (features, labels)
 
 if __name__ == "__main__":

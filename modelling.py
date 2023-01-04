@@ -52,13 +52,9 @@ def custom_tune_regression_model_hyperparameters(model_class, X_train, y_train, 
     return best_model, best_hyperparamater_values, best_performance_metrics
 
 # Uses sklearn's GridSearchCV on a linear regression model to find the best model
-def tune_regression_model_hyperparameters(X_train, y_train, X_test, y_test):
+def tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters):
 
-    hyperparameters = {'penalty': ['l1', 'l2'],
-                       'alpha': [10, 1, 0.1, 0.001, 0.0001, 0.00001, 0],
-                       'max_iter': [1000, 10000, 100000, 1000000]}
-
-    clf = model_selection.GridSearchCV(estimator=linear_model.SGDRegressor(),
+    clf = model_selection.GridSearchCV(estimator=estimator,
                                        scoring='neg_root_mean_squared_error',
                                        param_grid=hyperparameters, 
                                        verbose=3,
@@ -146,33 +142,32 @@ print(model.score(X_test, y_test))
 
 
 
-
 '''
 ## Model 3: DecisionTreeRegressor =>
 
-model = tree.DecisionTreeRegressor()
-model.fit(X_train, y_train)
+hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
+                   'max_depth': [1, 5, 25, 50, 100, 200]}
 
-print(model.score(X_test, y_test))
-predictions = model.predict(X_test)
+estimator = tree.DecisionTreeRegressor()
 
-print()
-print(predictions)
-print(y_test)
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+print(model)
 
-print()
-print(metrics.mean_squared_error(y_true=y_test, y_pred=predictions, squared=False))
+save_model('models/regression/decision_tree', model, model_hyperparameters, model_score_metrics)
 '''
-
-
 
 
 
 
 ''' 
 ## Model 2: SGDRegressor =>
+hyperparameters = {'penalty': ['l1', 'l2'],
+                    'alpha': [10, 1, 0.1, 0.001, 0.0001, 0.00001, 0],
+                    'max_iter': [1000, 10000, 100000, 1000000]}
 
-model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(X_train, y_train, X_test, y_test)
+estimators = linear_model.SGDRegressor()
+
+model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, y_train, X_test, y_test, hyperparameters)
 print(model)
 
 save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)

@@ -57,8 +57,7 @@ def tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y
 
     clf = model_selection.GridSearchCV(estimator=estimator,
                                        scoring='neg_root_mean_squared_error',
-                                       param_grid=hyperparameters, 
-                                       verbose=3,
+                                       param_grid=hyperparameters,
                                        n_jobs=-1)
 
     clf.fit(X_train, y_train)
@@ -153,6 +152,39 @@ def evaluate_all_models(X_train, y_train, X_test, y_test):
     gradientboost_CV(X_train, y_train, X_test, y_test)
     adaboost_CV(X_train, y_train, X_test, y_test)
 
+# Find the best model and return it
+def find_best_model():
+
+    cwd = os.getcwd()
+
+    folder = os.path.join(cwd, 'models/regression')
+    subfolders = ['adaboost', 'decision_tree', 'gradient_boosting', 'linear_regression', 'random_forest']
+
+    best_score = np.inf()
+
+    for subfolder in subfolders:
+
+        sub_directory = os.path.join(folder, subfolder)
+        metrics_path = os.path.join(sub_directory, 'metrics.json')
+
+        with open(metrics_path, 'rb') as f:
+            metrics = json.load(f)
+
+        if metrics["validation_RMSE"] < best_score:
+            best_score = metrics["validation_RMSE"]
+            best_metrics = metrics
+
+            model_path = os.path.join(sub_directory, 'model.joblib')
+            with open(model_path, 'rb') as f:
+                best_model = pickle.load(f)
+
+            hyperparameter_path = os.path.join(sub_directory, 'hyperparameters.json')
+            with open(hyperparameter_path, 'rb') as f:
+                best_hyperparameters = json.load(f)
+
+    return best_model, best_hyperparameters, best_metrics
+
+
 if __name__ == "__main__":
 
     # Load data
@@ -169,3 +201,6 @@ if __name__ == "__main__":
     X_test = scaler.transform(X_test)
 
     evaluate_all_models(X_train, y_train, X_test, y_test)
+
+    best_model, best_hyperparameters, best_metrics = find_best_model()
+

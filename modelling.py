@@ -103,7 +103,7 @@ def adaboost_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'estimator': [tree.DecisionTreeRegressor(), svm.NuSVR(), linear_model.SGDRegressor(), neighbors.KNeighborsRegressor()],
                    'n_estimators': [5, 20, 40, 80, 150, 250]}
     estimator = ensemble.AdaBoostRegressor()
-    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/regression/adaboost', model, model_hyperparameters, model_score_metrics)
@@ -114,7 +114,7 @@ def gradientboost_CV(X_train, X_test, y_train, y_test, save_ = True):
                 'loss': ['squared_error', 'absolute_error', 'huber', 'quantile'],
                 'learning_rate': [0.5, 1, 5, 10]}
     estimator = ensemble.GradientBoostingRegressor()
-    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/regression/gradient_boosting', model, model_hyperparameters, model_score_metrics)
@@ -127,7 +127,7 @@ def random_forest_CV(X_train, X_test, y_train, y_test, save_ = True):
                     'max_features' : ["sqrt", "log2", None], 
                     'min_samples_leaf': [1, 2, 3, 4, 5]}
     estimator = ensemble.RandomForestRegressor()
-    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
@@ -137,7 +137,7 @@ def decision_tree_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
                     'max_depth': [1, 5, 25, 50, 100, 200]}
     estimator = tree.DecisionTreeRegressor()
-    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, y_train, X_test, y_test, hyperparameters)
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimator, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/regression/decision_tree', model, model_hyperparameters, model_score_metrics)
@@ -148,7 +148,7 @@ def sgd_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
                         'alpha': [10, 1, 0.1, 0.001, 0.0001, 0.00001, 0],
                         'max_iter': [1000, 10000, 100000, 1000000]}
     estimators = linear_model.SGDRegressor()
-    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, y_train, X_test, y_test, hyperparameters)
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)    
@@ -268,17 +268,42 @@ def tune_classification_model_hyperparameters(estimator, X_train, X_test, y_trai
 
     return best_model, model_hyperparameters, best_score_metrics
 
-if __name__ == "__main__":
+# Function for running GridSearchCV for logistic regression
+def logistic_regression_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'penalty': ['l1', 'l2', 'elasticnet', None],
+                       'C': [0.25, 0.5, 0.75, 1, 1.5, 2],
+                       'max_iter': [50, 100, 500, 1000, 5000]}
+    estimators = linear_model.LogisticRegression(multi_class='multinomial')
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    print(model)
+    print()
+    print(model_hyperparameters)
+    print()
+    print(model_score_metrics)
+    
+    if save_ == True:
+        save_model('models/classification/logistic_regression', model, model_hyperparameters, model_score_metrics)    
+
+''' General '''
+# Function to preprocess data and obtain it in a clean format
+def generate_processed_data(regression = True):
+
+    if regression == True:
+        label_name = 'Price_Night'
+    else:
+        label_name = 'Category'
 
     # Load data for classification
-    X, y = load_airbnb('Category')
+    X, y = load_airbnb(label_name=label_name)
     X = np.array(X)
     y = np.array(y).reshape(-1)
 
-    # Label encode the Category labels
-    le = preprocessing.LabelEncoder()
-    le.fit(y)
-    y = le.transform(y)
+    if regression == False:
+        # Label encode the Category labels
+        le = preprocessing.LabelEncoder()
+        le.fit(y)
+        y = le.transform(y)
 
     # Split data into train, validation and test data
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
@@ -288,18 +313,10 @@ if __name__ == "__main__":
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    model = linear_model.LogisticRegression(multi_class='multinomial')
+    return X_train, X_test, y_train, y_test
 
-    param_grid = {'penalty': ['l1', 'l2', 'elasticnet', None],
-                  'C': [0.25, 0.5, 1, 2],
-                  'max_iter': [50, 100, 500, 1000, 5000]}
+if __name__ == "__main__":
 
-    best_model, model_hyperparameters, best_score_metrics = tune_classification_model_hyperparameters(model, X_train, X_test, y_train, y_test, param_grid)
+    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    print(best_model)
-    print()
-    print(model_hyperparameters)
-    print()
-    print(best_score_metrics)
-
-    save_model(folder='models/classification/logistic_regression', model=best_model, model_hyperparameters=model_hyperparameters, model_score_metrics=best_score_metrics)
+    logistic_regression_CV(X_train, X_test, y_train, y_test)

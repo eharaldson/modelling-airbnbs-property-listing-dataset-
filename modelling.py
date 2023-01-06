@@ -301,3 +301,5 @@ if __name__ == "__main__":
     print(model_hyperparameters)
     print()
     print(best_score_metrics)
+
+    save_model(folder='models/classification/logistic_regression', model=best_model, model_hyperparameters=model_hyperparameters, model_score_metrics=best_score_metrics)

@@ -108,6 +108,8 @@ def adaboost_CV(X_train, X_test, y_train, y_test, save_ = True):
     if save_ == True:
         save_model('models/regression/adaboost', model, model_hyperparameters, model_score_metrics)
 
+    return model, model_hyperparameters, model_score_metrics
+
 # Function for running GridSearchCV for gradient boosting
 def gradientboost_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'n_estimators': [5, 20, 40, 80, 150, 250],
@@ -118,6 +120,8 @@ def gradientboost_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     if save_ == True:
         save_model('models/regression/gradient_boosting', model, model_hyperparameters, model_score_metrics)
+
+    return model, model_hyperparameters, model_score_metrics
 
 # Function for running GridSearchCV for random forest
 def random_forest_CV(X_train, X_test, y_train, y_test, save_ = True):
@@ -132,6 +136,8 @@ def random_forest_CV(X_train, X_test, y_train, y_test, save_ = True):
     if save_ == True:
         save_model('models/regression/random_forest', model, model_hyperparameters, model_score_metrics)
 
+    return model, model_hyperparameters, model_score_metrics
+
 # Function for running GridSearchCV for decision tree regressor
 def decision_tree_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'criterion': ["squared_error", "friedman_mse", "absolute_error", "poisson"],
@@ -141,6 +147,8 @@ def decision_tree_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     if save_ == True:
         save_model('models/regression/decision_tree', model, model_hyperparameters, model_score_metrics)
+
+    return model, model_hyperparameters, model_score_metrics
 
 # Function for running GridSearchCV for sgd regressor
 def sgd_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
@@ -152,6 +160,8 @@ def sgd_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     if save_ == True:
         save_model('models/regression/linear_regression', model, model_hyperparameters, model_score_metrics)    
+
+    return model, model_hyperparameters, model_score_metrics
 
 # Function for running GridSearchCV on all the regression models
 def evaluate_all_regression_models(X_train, X_test, y_train, y_test, save_ = True):
@@ -276,14 +286,38 @@ def logistic_regression_CV(X_train, X_test, y_train, y_test, save_ = True):
     estimators = linear_model.LogisticRegression(multi_class='multinomial')
     model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
 
-    print(model)
-    print()
-    print(model_hyperparameters)
-    print()
-    print(model_score_metrics)
-    
     if save_ == True:
         save_model('models/classification/logistic_regression', model, model_hyperparameters, model_score_metrics)    
+
+    return model, model_hyperparameters, model_score_metrics
+
+# Function for running GridSearchCV for decision tree classifier
+def decision_tree_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'criterion': ['gini', 'entropy', 'log_loss'],
+                       'splitter': ['best', 'random'],
+                       'max_depth': [1, 5, 25, 50, 100, 200],
+                       'min_samples_leaf': [1, 2, 3, 5, 10]}
+    estimators = tree.DecisionTreeClassifier()
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/decision_tree', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
+# Function for running GridSearchCV for random_forest classifier
+def random_forest_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'criterion': ['gini', 'entropy', 'log_loss'],
+                    'n_estimators': [5, 20, 50, 100, 200, 400],
+                    'max_depth': [1, 5, 25, 50, 100],
+                    'min_samples_leaf': [1, 2, 3, 4, 5]}
+    estimators = ensemble.RandomForestClassifier()
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/random_forest', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
 
 ''' General '''
 # Function to preprocess data and obtain it in a clean format
@@ -319,4 +353,10 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    logistic_regression_CV(X_train, X_test, y_train, y_test)
+    model, model_hyperparameters, model_score_metrics = random_forest_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
+
+    print(model)
+    print()
+    print(model_hyperparameters)
+    print()
+    print(model_score_metrics)

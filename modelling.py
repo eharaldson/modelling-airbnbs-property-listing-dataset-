@@ -321,6 +321,21 @@ def random_forest_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     return model, model_hyperparameters, model_score_metrics
 
+# Function for running GridSearchCV for gradient boosting classifier
+def gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'loss': ['log_loss', 'deviance', 'exponential'],
+                       'learning_rate': [0.01, 0.05, 0.1, 0.5, 1],
+                       'n_estimators': [5, 20, 50, 100, 200, 400],
+                       'max_depth': [1, 3, 25, 50, 100],
+                       'min_samples_leaf': [1, 2, 3, 4, 5]}
+    estimators = ensemble.GradientBoostingClassifier()
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/gradientboost', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
 ''' General '''
 # Function to preprocess data and obtain it in a clean format
 def generate_processed_data(regression = True):
@@ -364,20 +379,12 @@ def plot_categorical_data():
 
 if __name__ == "__main__":
 
-    # X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
+    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    # model = ensemble.GradientBoostingClassifier()
-    # model.fit(X_train, y_train)
+    model, model_hyperparameters, model_score_metrics = gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
 
-    # print(model.score(X_test, y_test))
-
-    plot_categorical_data()
-
-
-    # model, model_hyperparameters, model_score_metrics = gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
-
-    # print(model)
-    # print()
-    # print(model_hyperparameters)
-    # print()
-    # print(model_score_metrics)
+    print(model)
+    print()
+    print(model_hyperparameters)
+    print()
+    print(model_score_metrics)

@@ -6,6 +6,8 @@ import os
 import json
 import pickle
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 np.random.seed(20)
 
@@ -308,9 +310,9 @@ def decision_tree_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
 # Function for running GridSearchCV for random_forest classifier
 def random_forest_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'criterion': ['gini', 'entropy', 'log_loss'],
-                    'n_estimators': [5, 20, 50, 100, 200, 400],
-                    'max_depth': [1, 5, 25, 50, 100],
-                    'min_samples_leaf': [1, 2, 3, 4, 5]}
+                       'n_estimators': [5, 20, 50, 100, 200, 400],
+                       'max_depth': [1, 5, 25, 50, 100],
+                       'min_samples_leaf': [1, 2, 3, 4, 5]}
     estimators = ensemble.RandomForestClassifier()
     model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
 
@@ -349,14 +351,33 @@ def generate_processed_data(regression = True):
 
     return X_train, X_test, y_train, y_test
 
+# Plot the unique categorical values in a histogram
+def plot_categorical_data():
+    X, y = load_airbnb('Category')
+
+    plt.figure()
+    y['Category'].value_counts().plot(kind='bar')
+    plt.xlabel('Listing categories')
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
 
-    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
+    # X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    model, model_hyperparameters, model_score_metrics = random_forest_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
+    # model = ensemble.GradientBoostingClassifier()
+    # model.fit(X_train, y_train)
 
-    print(model)
-    print()
-    print(model_hyperparameters)
-    print()
-    print(model_score_metrics)
+    # print(model.score(X_test, y_test))
+
+    plot_categorical_data()
+
+
+    # model, model_hyperparameters, model_score_metrics = gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
+
+    # print(model)
+    # print()
+    # print(model_hyperparameters)
+    # print()
+    # print(model_score_metrics)

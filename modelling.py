@@ -165,6 +165,20 @@ def sgd_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     return model, model_hyperparameters, model_score_metrics
 
+# Function for running GridSearchCV for linear SVM regressor
+def linear_SVM_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'epsilon': [0, 0.5, 1, 5, 10],
+                       'C': [0.25, 0.5, 1, 1.5, 2],
+                       'loss': ['epsilon_insensitive', 'squared_epsilon_insensitive'],
+                       'max_iter': [500, 1000, 1500, 2000]}
+    estimators = svm.LinearSVR()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/regression/linear_svm', model, model_hyperparameters, model_score_metrics)    
+
+    return model, model_hyperparameters, model_score_metrics
+
 # Function for running GridSearchCV on all the regression models
 def evaluate_all_regression_models(X_train, X_test, y_train, y_test, save_ = True):
 
@@ -435,9 +449,9 @@ def plot_categorical_data():
 
 if __name__ == "__main__":
 
-    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
+    X_train, X_test, y_train, y_test = generate_processed_data(regression=True)
 
-    model, model_hyperparameters, model_score_metrics = gaussian_process_CV(X_train, X_test, y_train, y_test, save_=True)
+    model, model_hyperparameters, model_score_metrics = linear_SVM_regressor_CV(X_train, X_test, y_train, y_test, save_=True)
 
     print(model)
     print()

@@ -1,0 +1,1 @@
+{"C": 0.25, "loss": "squared_hinge", "max_iter": 500, "multi_class": "ovr", "penalty": "l2"}

@@ -1,5 +1,5 @@
 from tabular_data import load_airbnb
-from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, datasets
+from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, gaussian_process
 from itertools import product
 
 import os
@@ -356,13 +356,39 @@ def linear_SVM_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'penalty': ['l1', 'l2'],
                        'loss': ['hinge', 'squared_hinge'],
                        'C': [0.25, 0.5, 0.75, 1, 1.5, 2],
-                       'multiclass': ['ovr', 'crammer_singer'],
+                       'multi_class': ['ovr', 'crammer_singer'],
                        'max_iter': [500, 1000, 1500, 2000, 5000]}
     estimators = svm.LinearSVC()
     model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
 
     if save_ == True:
         save_model('models/classification/linear_svm', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
+# Function for running GridSearchCV for SVM classifier
+def SVM_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'degree': [1, 2, 3, 4, 5],
+                       'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+                       'C': [0.25, 0.5, 0.75, 1, 1.5, 2],
+                       'gamma': ['auto', 'scale', 0.1, 1.0, 10.0]}
+    estimators = svm.SVC()
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/svm', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
+# Function for running GridSearchCV for gaussian process classifier
+def gaussian_process_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'max_iter_predict': [50, 100, 200, 400, 1000],
+                       'multi_class': ['one_vs_rest', 'one_vs_one']}
+    estimators = gaussian_process.GaussianProcessClassifier(n_jobs=-1)
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/gaussian_process', model, model_hyperparameters, model_score_metrics) 
 
     return model, model_hyperparameters, model_score_metrics
 
@@ -411,7 +437,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    model, model_hyperparameters, model_score_metrics = linear_SVM_CV(X_train, X_test, y_train, y_test, save_=True)
+    model, model_hyperparameters, model_score_metrics = gaussian_process_CV(X_train, X_test, y_train, y_test, save_=True)
 
     print(model)
     print()

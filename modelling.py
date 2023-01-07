@@ -179,6 +179,21 @@ def linear_SVM_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     return model, model_hyperparameters, model_score_metrics
 
+# Function for running GridSearchCV for SVR regressor
+def SVM_regressor_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
+                       'degree': [1, 2, 3, 4, 5],
+                       'gamma': ['auto', 'scale', 0.00001, 0.0001, 0.001, 0.01, 0.1],
+                       'C': [0.25, 0.5, 1, 1.5, 2],
+                       'epsilon': [0, 0.5, 1, 5, 10]}
+    estimators = svm.SVR()
+    model, model_hyperparameters, model_score_metrics = tune_regression_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/regression/svm', model, model_hyperparameters, model_score_metrics)    
+
+    return model, model_hyperparameters, model_score_metrics
+
 # Function for running GridSearchCV on all the regression models
 def evaluate_all_regression_models(X_train, X_test, y_train, y_test, save_ = True):
 
@@ -385,7 +400,7 @@ def SVM_CV(X_train, X_test, y_train, y_test, save_ = True):
     hyperparameters = {'degree': [1, 2, 3, 4, 5],
                        'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                        'C': [0.25, 0.5, 0.75, 1, 1.5, 2],
-                       'gamma': ['auto', 'scale', 0.1, 1.0, 10.0]}
+                       'gamma': ['auto', 'scale', 0.00001, 0.0001, 0.001, 0.01, 0.1]}
     estimators = svm.SVC()
     model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
 
@@ -451,7 +466,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = generate_processed_data(regression=True)
 
-    model, model_hyperparameters, model_score_metrics = linear_SVM_regressor_CV(X_train, X_test, y_train, y_test, save_=True)
+    model, model_hyperparameters, model_score_metrics = SVM_regressor_CV(X_train, X_test, y_train, y_test, save_=True)
 
     print(model)
     print()

@@ -421,6 +421,52 @@ def gaussian_process_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     return model, model_hyperparameters, model_score_metrics
 
+# Function for running GridSearchCV on all the classification models
+def evaluate_all_classification_models(X_train, X_test, y_train, y_test, save_ = True):
+
+    # Run the regression models and save the best one after cross validation
+    logistic_regression_CV(X_train, X_test, y_train, y_test)
+    decision_tree_classifier_CV(X_train, X_test, y_train, y_test)
+    random_forest_classifier_CV(X_train, X_test, y_train, y_test)
+    gradientboost_classifier_CV(X_train, X_test, y_train, y_test)
+    nearest_neighbour_CV(X_train, X_test, y_train, y_test)
+    linear_SVM_CV(X_train, X_test, y_train, y_test)
+    SVM_CV(X_train, X_test, y_train, y_test)
+    gaussian_process_CV(X_train, X_test, y_train, y_test)
+
+# Find the best classification model and return it
+def find_best_classification_model():
+
+    cwd = os.getcwd()
+
+    folder = os.path.join(cwd, 'models/classification')
+    subfolders = ['gaussian_process', 'decision_tree', 'gradientboost', 'logistic_regression', 'random_forest', 'k_nearest_neighbors', 'linear_svm', 'svm']
+
+    best_score = 99999999999
+
+    for subfolder in subfolders:
+
+        sub_directory = os.path.join(folder, subfolder)
+        metrics_path = os.path.join(sub_directory, 'metrics.json')
+
+        with open(metrics_path, 'rb') as f:
+            metrics = json.load(f)
+
+        if metrics["validation_accuracy"] > best_score:
+            best_score = metrics["validation_accuracy"]
+            best_metrics = metrics
+
+            model_path = os.path.join(sub_directory, 'model.joblib')
+            with open(model_path, 'rb') as f:
+                best_model = pickle.load(f)
+
+            hyperparameter_path = os.path.join(sub_directory, 'hyperparameters.json')
+            with open(hyperparameter_path, 'rb') as f:
+                best_hyperparameters = json.load(f)
+
+    return best_model, best_hyperparameters, best_metrics
+
+
 ''' General '''
 # Function to preprocess data and obtain it in a clean format
 def generate_processed_data(regression = True):

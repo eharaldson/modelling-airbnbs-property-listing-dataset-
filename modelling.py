@@ -336,6 +336,36 @@ def gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_ = True):
 
     return model, model_hyperparameters, model_score_metrics
 
+# Function for running GridSearchCV for nearest neighbour classifier
+def nearest_neighbour_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'n_neighbors': [1, 2, 3, 5, 7, 10],
+                       'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],
+                       'leaf_size': [10, 20, 30, 40, 50],
+                       'p': [1, 2, 3, 4],
+                       'weights': ['uniform', 'distance']}
+    estimators = neighbors.KNeighborsClassifier(n_jobs=-1)
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/k_nearest_neighbors', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
+# Function for running GridSearchCV for linear SVM classifier
+def linear_SVM_CV(X_train, X_test, y_train, y_test, save_ = True):
+    hyperparameters = {'penalty': ['l1', 'l2'],
+                       'loss': ['hinge', 'squared_hinge'],
+                       'C': [0.25, 0.5, 0.75, 1, 1.5, 2],
+                       'multiclass': ['ovr', 'crammer_singer'],
+                       'max_iter': [500, 1000, 1500, 2000, 5000]}
+    estimators = svm.LinearSVC()
+    model, model_hyperparameters, model_score_metrics = tune_classification_model_hyperparameters(estimators, X_train, X_test, y_train, y_test, hyperparameters)
+
+    if save_ == True:
+        save_model('models/classification/linear_svm', model, model_hyperparameters, model_score_metrics) 
+
+    return model, model_hyperparameters, model_score_metrics
+
 ''' General '''
 # Function to preprocess data and obtain it in a clean format
 def generate_processed_data(regression = True):
@@ -381,7 +411,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    model, model_hyperparameters, model_score_metrics = gradientboost_classifier_CV(X_train, X_test, y_train, y_test, save_=True)
+    model, model_hyperparameters, model_score_metrics = linear_SVM_CV(X_train, X_test, y_train, y_test, save_=True)
 
     print(model)
     print()

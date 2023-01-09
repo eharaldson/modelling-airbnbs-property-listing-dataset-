@@ -1,1 +1,1 @@
-{"estimator": "DecisionTreeRegressor()", "n_estimators": 250}
+{"estimator": "DecisionTreeRegressor()", "n_estimators": 150}

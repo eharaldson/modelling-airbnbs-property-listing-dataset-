@@ -447,7 +447,7 @@ def find_best_model(task_folder):
         folder = os.path.join(cwd, 'models/classification')
         subfolders = ['gaussian_process', 'decision_tree', 'gradientboost', 'logistic_regression', 'random_forest', 'k_nearest_neighbors', 'linear_svm', 'svm']
 
-        validation_score = "validation_RMSE"
+        validation_score = "validation_accuracy"
         best_score = 0
         model_type = 'c'
 
@@ -482,9 +482,12 @@ def find_best_model(task_folder):
 
 if __name__ == "__main__":
 
-    X_train, X_test, y_train, y_test = generate_processed_data(regression=True)
+    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
 
-    model, model_hyperparameters, model_score_metrics = SVM_regressor_CV(X_train, X_test, y_train, y_test, save_=True)
+    folder = 'models/classification'
+
+    evaluate_all_models(X_train, X_test, y_train, y_test, task_folder=folder)
+    model, model_hyperparameters, model_score_metrics = find_best_model(task_folder=folder)
 
     print(model)
     print()

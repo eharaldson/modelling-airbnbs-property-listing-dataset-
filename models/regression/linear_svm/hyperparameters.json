@@ -1,1 +1,1 @@
-{"C": 2, "epsilon": 5, "loss": "squared_epsilon_insensitive", "max_iter": 500}
+{"C": 2, "epsilon": 0.5, "loss": "squared_epsilon_insensitive", "max_iter": 500}

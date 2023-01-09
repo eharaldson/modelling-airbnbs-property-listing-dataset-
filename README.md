@@ -120,6 +120,8 @@ def resize_images():
     - GradientBoostingRegressor()
     - RandomForestRegressor()
     - DecisionTreeRegressor()
+    - LinearSVR()
+    - SVR()
 
 - A cross validation over some important hyperparameters was conducted on each model. The models, metrics and best hyperparameters were saved in individual folders.
 
@@ -128,10 +130,39 @@ def resize_images():
 - The best model and its hyperparameters was a random forest regressor as seen below...
 
 ```
-RandomForestRegressor(max_depth=200, 
-                      max_features='log2', 
-                      min_samples_leaf=3,
+RandomForestRegressor(max_depth=100, 
+                      max_features='sqrt', 
+                      min_samples_leaf=2,
                       n_estimators=20)
 ```
 
-- There are more regression models I would like to look at such as: support vector machines, bayesian regression and also neural networks (which will ultimately be used later one)
+- For this model the mean validation RMSE (Root Mean Squared Error) was 99.33. This is better than the linear regression model but is still quite low.
+
+- There are more regression models I would like to look at such as: bayesian regression which has not been looked at in the notes and also neural networks (which will ultimately be used later one)
+
+### All classification models
+
+- To test out different classification models, I looked at the numerical data from before and used the 'Category' column of the dataset as the output label. This label consists of different categories of listing such as treehouse and chalet. 
+
+- The classification models that were looked at:
+    - LogisticRegression()
+    - KNeighborsClassifier()
+    - GradientBoostingClassifier()
+    - RandomForestClassifier()
+    - DecisionTreeClassifier()
+    - LinearSVC()
+    - SVC()
+    - GaussianProcessClassifier()
+
+- A similar process was carried out as before by comparing the best cross validated model but in this case, the mean validation accuracy score was used to compare models.
+
+- The best classification model was found to be:
+
+```
+GradientBoostingClassifier(max_depth=1,
+                           min_samples_leaf=5)
+```
+
+- For this model the mean validation accuracy score is 0.401. This accuracy is better than logistic regression which achieved a mean validation accuracy score of 0.389 but it is still quite low and would not constitute a usable model. The model is clearly better than a random guesser; which since there are 5 classes would tend to achieve an accuracy score of 0.2, however it is still a very low accuracy. Hopefully the neural network used later on will be able to achieve better scores than the classifier models used so far.
+
+- In the future I would like to look more at using a neural network for classification as well as a Naive Bayes classification model.

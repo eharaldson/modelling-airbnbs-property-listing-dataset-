@@ -1,6 +1,10 @@
 from tabular_data import load_airbnb
+from pytorch_datasets import AirbnbNightlyPriceImageDataset
+
 from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, gaussian_process
+from torch.utils.data import random_split
 from itertools import product
+import torch.utils.data
 
 import os
 import json
@@ -482,15 +486,26 @@ def find_best_model(task_folder):
 
 if __name__ == "__main__":
 
-    X_train, X_test, y_train, y_test = generate_processed_data(regression=False)
+    data = AirbnbNightlyPriceImageDataset()
 
-    folder = 'models/classification'
+    train, validation, test = random_split(data, [0.7, 0.15, 0.15])
 
-    evaluate_all_models(X_train, X_test, y_train, y_test, task_folder=folder)
-    model, model_hyperparameters, model_score_metrics = find_best_model(task_folder=folder)
+    batch_size = 32
+    dataloaders = {
+        "train": torch.utils.data.DataLoader(
+            train,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        "validation": torch.utils.data.DataLoader(
+            validation, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+        "test": torch.utils.data.DataLoader(
+            test, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+    }
 
-    print(model)
-    print()
-    print(model_hyperparameters)
-    print()
-    print(model_score_metrics)
+    for batch in dataloaders['train']:
+        print(batch)
+        break

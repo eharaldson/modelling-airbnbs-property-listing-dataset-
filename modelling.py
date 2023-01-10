@@ -5,6 +5,7 @@ from sklearn import linear_model, model_selection, metrics, preprocessing, tree,
 from torch.utils.data import random_split
 from itertools import product
 import torch.utils.data
+import torch
 
 import os
 import json
@@ -484,28 +485,50 @@ def find_best_model(task_folder):
 
     return best_model, best_hyperparameters, best_metrics
 
-if __name__ == "__main__":
 
-    data = AirbnbNightlyPriceImageDataset()
+''' Deep Learning '''
+# Neural Network model class
+class NeuralNetwork(torch.nn.Module):
 
-    train, validation, test = random_split(data, [0.7, 0.15, 0.15])
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+    
+    def forward(self, features):
+        parameters = torch.randn((features.shape[1]))
+        predictions = features @ parameters
+        return predictions
 
-    batch_size = 32
-    dataloaders = {
-        "train": torch.utils.data.DataLoader(
-            train,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        "validation": torch.utils.data.DataLoader(
-            validation, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-        ),
-        "test": torch.utils.data.DataLoader(
-            test, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-        ),
-    }
+# Function to train a neural network
+def train(model, dataloader, epochs):
 
-    for batch in dataloaders['train']:
-        print(batch)
+    for epoch in range(epochs):
+        batch = next(iter(dataloader))
+        predictions = model(batch)
         break
+
+if __name__ == "__main__":
+    pass
+    # data = AirbnbNightlyPriceImageDataset()
+
+    # train, validation, test = random_split(data, [0.7, 0.15, 0.15])
+
+    # batch_size = 32
+    # dataloaders = {
+    #     "train": torch.utils.data.DataLoader(
+    #         train,
+    #         batch_size=batch_size,
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     "validation": torch.utils.data.DataLoader(
+    #         validation, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+    #     ),
+    #     "test": torch.utils.data.DataLoader(
+    #         test, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+    #     ),
+    # }
+
+    # for batch in dataloaders['train']:
+    #     print(batch)
+    #     break

@@ -525,7 +525,6 @@ def train(model, dataloader, epochs=10):
             optimiser.zero_grad()
             writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
             batch_index += 1
-            
 
 if __name__ == "__main__":
     data = AirbnbNightlyPriceImageDataset()

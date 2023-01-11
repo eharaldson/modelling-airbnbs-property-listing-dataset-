@@ -4,8 +4,11 @@ from pytorch_datasets import AirbnbNightlyPriceImageDataset
 from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, gaussian_process
 from torch.utils.data import random_split
 from itertools import product
+
 import torch.utils.data
 import torch
+import torch.nn.functional as F
+import torch.utils.tensorboard
 
 import os
 import json
@@ -502,10 +505,23 @@ class NeuralNetwork(torch.nn.Module):
 # Function to train a neural network
 def train(model, dataloader, epochs):
 
+    optimiser = torch.optim.SGD(params=model.parameters(), lr=0.001)
+
+    writer = torch.utils.tensorboard.SummaryWriter()
+
+    batch_index = 0
+
     for epoch in range(epochs):
-        batch = next(iter(dataloader))
-        predictions = model(batch)
-        break
+        for batch in dataloader:
+            features, labels = batch
+            predictions = model(features)
+            loss = F.mse_loss(predictions, labels)
+            loss.backward()
+            optimiser.step()
+            optimiser.zero_grad()
+            writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
+            batch_index += 1
+            
 
 if __name__ == "__main__":
     pass

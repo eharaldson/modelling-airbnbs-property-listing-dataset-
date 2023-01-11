@@ -9,7 +9,7 @@ class AirbnbNightlyPriceImageDataset(Dataset):
         self.X, self.y = load_airbnb()
 
     def __getitem__(self, index) -> tuple[torch.tensor, torch.tensor]:
-        return (torch.tensor(self.X.iloc[index]), torch.tensor(self.y.iloc[index]))
+        return (torch.tensor(self.X.iloc[index]).float(), torch.tensor(self.y.iloc[index]).float())
 
     def __len__(self) -> int:
         return len(self.y)

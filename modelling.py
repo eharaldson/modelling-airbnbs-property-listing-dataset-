@@ -491,19 +491,21 @@ def find_best_model(task_folder):
 
 ''' Deep Learning '''
 # Neural Network model class
-class NeuralNetwork(torch.nn.Module):
+class NNRegression(torch.nn.Module):
 
-    def __init__(self, data):
+    def __init__(self):
         super().__init__()
-        self.data = data
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(11, 22),
+            torch.nn.ReLU(),
+            torch.nn.Linear(22, 1)
+        )
     
     def forward(self, features):
-        parameters = torch.randn((features.shape[1]))
-        predictions = features @ parameters
-        return predictions
+        return self.layers(features)
 
 # Function to train a neural network
-def train(model, dataloader, epochs):
+def train(model, dataloader, epochs=10):
 
     optimiser = torch.optim.SGD(params=model.parameters(), lr=0.001)
 
@@ -514,8 +516,10 @@ def train(model, dataloader, epochs):
     for epoch in range(epochs):
         for batch in dataloader:
             features, labels = batch
+            print(features.dtype, labels.dtype)
             predictions = model(features)
             loss = F.mse_loss(predictions, labels)
+            print(loss.item())
             loss.backward()
             optimiser.step()
             optimiser.zero_grad()
@@ -524,27 +528,25 @@ def train(model, dataloader, epochs):
             
 
 if __name__ == "__main__":
-    pass
-    # data = AirbnbNightlyPriceImageDataset()
+    data = AirbnbNightlyPriceImageDataset()
+    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
 
-    # train, validation, test = random_split(data, [0.7, 0.15, 0.15])
+    batch_size = 32
+    dataloaders = {
+        "train": torch.utils.data.DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        "validation": torch.utils.data.DataLoader(
+            validation_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+        "test": torch.utils.data.DataLoader(
+            test_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+    }
 
-    # batch_size = 32
-    # dataloaders = {
-    #     "train": torch.utils.data.DataLoader(
-    #         train,
-    #         batch_size=batch_size,
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     ),
-    #     "validation": torch.utils.data.DataLoader(
-    #         validation, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-    #     ),
-    #     "test": torch.utils.data.DataLoader(
-    #         test, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-    #     ),
-    # }
+    model = NNRegression()
 
-    # for batch in dataloaders['train']:
-    #     print(batch)
-    #     break
+    train(model, dataloaders['train'])

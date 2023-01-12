@@ -494,21 +494,54 @@ def find_best_model(task_folder):
 # Neural Network model class
 class NNRegression(torch.nn.Module):
 
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        self.layers = torch.nn.Sequential(
-            torch.nn.Linear(11, 22),
-            torch.nn.ReLU(),
-            torch.nn.Linear(22, 1)
-        )
+        layer_widths = config['hidden_layer_width']
+        modules = []
+        for i in range(config['model_depth']):
+            if i == config['model_depth']-1:
+                modules.append(torch.nn.Linear(layer_widths[i], 1))
+            else:
+                modules.append(torch.nn.Linear(layer_widths[i], layer_widths[i+1]))
+                modules.append(torch.nn.ReLU())
+        self.layers = torch.nn.Sequential(*modules)
     
     def forward(self, features):
         return self.layers(features)
 
-# Function to train a neural network
-def train(model, dataloader, epochs=10):
+# Function to get the instance of the optimiser class from the name
+def get_optimiser_from_name(model, name, lr):
+    if name == 'Adam':
+        return torch.optim.Adam(params=model.parameters(), lr=lr)
+    elif name == 'Adadelta':
+        return torch.optim.Adadelta(params=model.parameters(), lr=lr)
+    elif name == 'Adagrad':
+        return torch.optim.Adagrad(params=model.parameters(), lr=lr)
+    elif name == 'AdamW':
+        return torch.optim.AdamW(params=model.parameters(), lr=lr)
+    elif name == 'SparseAdam':
+        return torch.optim.SparseAdam(params=model.parameters(), lr=lr)
+    elif name == 'Adamax':
+        return torch.optim.Adamax(params=model.parameters(), lr=lr)
+    elif name == 'ASGD':
+        return torch.optim.ASGD(params=model.parameters(), lr=lr)
+    elif name == 'LBFGS':
+        return torch.optim.LBFGS(params=model.parameters(), lr=lr)
+    elif name == 'NAdam':
+        return torch.optim.NAdam(params=model.parameters(), lr=lr)
+    elif name == 'RAdam':
+        return torch.optim.RAdam(params=model.parameters(), lr=lr)
+    elif name == 'RMSprop':
+        return torch.optim.RMSprop(params=model.parameters(), lr=lr)
+    elif name == 'Rprop':
+        return torch.optim.Rprop(params=model.parameters(), lr=lr)
+    else:
+        return torch.optim.SGD(params=model.parameters(), lr=lr)
 
-    optimiser = torch.optim.SGD(params=model.parameters(), lr=0.001)
+# Function to train a neural network
+def train(model, dataloader, hyperparams, epochs=10):
+
+    optimiser = get_optimiser_from_name(model=model, name=hyperparams['optimiser'], lr=hyperparams['lr'])
 
     writer = torch.utils.tensorboard.SummaryWriter()
 
@@ -517,7 +550,6 @@ def train(model, dataloader, epochs=10):
     for epoch in range(epochs):
         for batch in dataloader:
             features, labels = batch
-            print(features.dtype, labels.dtype)
             predictions = model(features)
             loss = F.mse_loss(predictions, labels)
             print(loss.item())

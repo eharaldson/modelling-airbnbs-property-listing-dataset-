@@ -499,12 +499,12 @@ class NNRegression(torch.nn.Module):
         layer_widths = config['hidden_layer_width']
         modules = []
         for i in range(config['model_depth']):
-            if i == config['model_depth']-1:
-                modules.append(torch.nn.Linear(layer_widths[i], 1))
-            else:
-                modules.append(torch.nn.Linear(layer_widths[i], layer_widths[i+1]))
+            modules.append(torch.nn.Linear(in_features=layer_widths[i][0], out_features=layer_widths[i][1]))
+            if i < config['model_depth']-1:
                 modules.append(torch.nn.ReLU())
         self.layers = torch.nn.Sequential(*modules)
+
+        print(self.layers)
     
     def forward(self, features):
         return self.layers(features)
@@ -570,26 +570,34 @@ def get_nn_config():
 if __name__ == "__main__":
 
     nn_config = get_nn_config()
-    print(nn_config)
-    # data = AirbnbNightlyPriceImageDataset()
-    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
 
-    # batch_size = 32
-    # dataloaders = {
-    #     "train": torch.utils.data.DataLoader(
-    #         train_data,
-    #         batch_size=batch_size,
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     ),
-    #     "validation": torch.utils.data.DataLoader(
-    #         validation_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-    #     ),
-    #     "test": torch.utils.data.DataLoader(
-    #         test_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-    #     ),
-    # }
+    data = AirbnbNightlyPriceImageDataset()
 
-    # model = NNRegression()
+    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
 
-    # train(model, dataloaders['train'])
+    batch_size = 32
+    dataloaders = {
+        "train": torch.utils.data.DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        "validation": torch.utils.data.DataLoader(
+            validation_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+        "test": torch.utils.data.DataLoader(
+            test_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+        ),
+    }
+
+    model = NNRegression(config=nn_config)
+
+    train(model, dataloaders['train'], hyperparams=nn_config)
+
+    features, labels = next(iter(dataloaders['validation']))
+
+    predictions = model(features)
+
+    print(predictions)
+    print(labels)

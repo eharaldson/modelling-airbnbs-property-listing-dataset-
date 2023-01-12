@@ -12,6 +12,7 @@ import torch.utils.tensorboard
 
 import os
 import json
+import yaml
 import pickle
 import numpy as np
 import pandas as pd
@@ -526,26 +527,37 @@ def train(model, dataloader, epochs=10):
             writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
             batch_index += 1
 
+# Function that reads the nn config yaml file and returns a dictionary
+def get_nn_config():
+    with open("nn_config.yaml", "r") as f:
+        try:
+            return yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            print(exc)
+
 if __name__ == "__main__":
-    data = AirbnbNightlyPriceImageDataset()
-    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
 
-    batch_size = 32
-    dataloaders = {
-        "train": torch.utils.data.DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        "validation": torch.utils.data.DataLoader(
-            validation_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-        ),
-        "test": torch.utils.data.DataLoader(
-            test_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
-        ),
-    }
+    nn_config = get_nn_config()
+    print(nn_config)
+    # data = AirbnbNightlyPriceImageDataset()
+    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
 
-    model = NNRegression()
+    # batch_size = 32
+    # dataloaders = {
+    #     "train": torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=batch_size,
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     "validation": torch.utils.data.DataLoader(
+    #         validation_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+    #     ),
+    #     "test": torch.utils.data.DataLoader(
+    #         test_data, batch_size=batch_size, shuffle=True, pin_memory=torch.cuda.is_available()
+    #     ),
+    # }
 
-    train(model, dataloaders['train'])
+    # model = NNRegression()
+
+    # train(model, dataloaders['train'])

@@ -12,6 +12,7 @@ class AirbnbNightlyPriceImageDataset(Dataset):
         scaler = preprocessing.StandardScaler()
         scaler.fit(self.X)
         self.X = scaler.transform(self.X)
+
         self.y = self.y.to_numpy()
 
     def __getitem__(self, index) -> tuple[torch.tensor, torch.tensor]:

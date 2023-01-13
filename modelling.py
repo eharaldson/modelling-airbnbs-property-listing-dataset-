@@ -15,6 +15,7 @@ import json
 import yaml
 import time
 import pickle
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -494,6 +495,7 @@ def save_model(folder, model, model_hyperparameters, model_score_metrics):
     with open(score_filename, 'w') as outfile:
         json.dump(model_score_metrics, outfile)
 
+
 ''' Deep Learning '''
 # Neural Network model class
 class NNRegression(torch.nn.Module):
@@ -554,7 +556,6 @@ def train(model, dataloader, hyperparams, epochs=10):
             features, labels = batch
             predictions = model(features)
             loss = F.mse_loss(predictions, labels)
-            print(loss.item())
             loss.backward()
             optimiser.step()
             optimiser.zero_grad()
@@ -570,18 +571,16 @@ def get_nn_config():
             print(exc)
 
 # Evaluates the neural networks metrics
-def evaluate_nn(model, train_loader, train, validation, test, nn_config):
+def evaluate_nn(model, data_loader, nn_config):
 
     start = time.time()
-    train(model, train_loader, hyperparams=nn_config)
+    train(model, data_loader['train'], hyperparams=nn_config)
+
     training_duration = time.time() - start
 
-    x_train = train.dataset.X[train.indices]
-    y_train = train.dataset.y[train.indices]
-    x_validation = validation.dataset.X[validation.indices]
-    y_validation = validation.dataset.y[validation.indices]
-    x_test = test.dataset.X[test.indices]
-    y_test = test.dataset.y[test.indices]
+    x_train, y_train = next(iter(data_loader['train_metrics']))
+    x_validation, y_validation = next(iter(data_loader['validation']))
+    x_test, y_test = next(iter(data_loader['test']))
 
     start = time.time()
     train_predictions = model(x_train)
@@ -590,45 +589,82 @@ def evaluate_nn(model, train_loader, train, validation, test, nn_config):
     inference_latency = (time.time() - start) / (len(x_train) + len(x_validation) + len(x_test))
 
     train_rmse = torch.sqrt(F.mse_loss(train_predictions, y_train))
-    train_r2 = metrics.r2_score(y_train.numpy(), train_predictions.numpy())
+    train_r2 = metrics.r2_score(y_train.numpy(), train_predictions.detach().numpy())
     validation_rmse = torch.sqrt(F.mse_loss(validation_predictions, y_validation))
-    validation_r2 = metrics.r2_score(y_validation.numpy(), validation_predictions.numpy())
+    validation_r2 = metrics.r2_score(y_validation.numpy(), validation_predictions.detach().numpy())
     test_rmse = torch.sqrt(F.mse_loss(test_predictions, y_test))
-    test_r2 = metrics.r2_score(y_test.numpy(), test_predictions.numpy())
+    test_r2 = metrics.r2_score(y_test.numpy(), test_predictions.detach().numpy())
 
     return {
         'RMSE_loss': {
-            'train': train_rmse,
-            'validation': validation_rmse,
-            'test': test_rmse
+            'train': np.float32(train_rmse),
+            'validation': np.float32(validation_rmse),
+            'test': np.float32(test_rmse)
         },
         'R_squared': {
-            'train': train_r2,
-            'validation': validation_r2,
-            'test': test_r2
+            'train': np.float32(train_r2),
+            'validation': np.float32(validation_r2),
+            'test': np.float32(test_r2)
         },
         'training_duration': training_duration,
         'inference_latency': inference_latency
     }
 
+# Create a folder with the current time in the name to then save a neural network model
+def save_nn(model, hyperparams, metrics, regression=True):
+
+    cwd = os.getcwd()
+    if regression == True:
+        folder_path = os.path.joint(cwd, 'models/neural_networks/regression')
+    else:
+        folder_path = os.path.joint(cwd, 'models/neural_networks/classification')
+
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d_%H:%M:%S")
+    folder_path = os.path.joint(folder_path, current_time)
+
+    save_model(folder=folder_path, model=model, model_hyperparameters=hyperparams, model_score_metrics=metrics)
+
 if __name__ == "__main__":
 
     nn_config = get_nn_config()
-
     data = AirbnbNightlyPriceImageDataset()
 
     train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
-
-    batch_size = 32
-    train_loader = torch.utils.data.DataLoader(
+    batch_size = 64
+    data_loaders = {
+        'train': torch.utils.data.DataLoader(
             train_data,
             batch_size=batch_size,
             shuffle=True,
             pin_memory=torch.cuda.is_available(),
+        ),
+        'train_metrics': torch.utils.data.DataLoader(
+            train_data,
+            batch_size=len(train_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'validation': torch.utils.data.DataLoader(
+            validation_data,
+            batch_size=len(validation_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'test': torch.utils.data.DataLoader(
+            test_data,
+            batch_size=len(test_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
         )
+    }
 
-    # print(len(next(iter(dataloaders['train_metrics']))))
-    # model = NNRegression(config=nn_config)
+    model = NNRegression(config=nn_config)
+    train(model, data_loaders['train'], hyperparams=nn_config, epochs=30)
 
-    # model_metrics = evaluate_nn(model, train_loader, train_data, validation_data, test_data, nn_config=nn_config)
-    # print(model_metrics)
+    predictions = model(next(iter(data_loaders['validation']))[0]).detach().numpy()
+    y_true = next(iter(data_loaders['validation']))[1].numpy()
+    print([predictions[:10], y_true[:10]])
+
+    rmse = metrics.mean_squared_error(y_true, predictions, squared=False)
+    print(rmse)

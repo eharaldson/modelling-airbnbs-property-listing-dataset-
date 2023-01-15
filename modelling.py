@@ -577,12 +577,16 @@ def get_nn_config():
             print(exc)
 
 # Evaluates the neural networks metrics
-def evaluate_nn(model, data_loader, nn_config, epochs=10):
+def evaluate_nn(model, data_loader, nn_config):
 
     start = time.time()
-    train(model, data_loader, hyperparams=nn_config, epochs=epochs)
+    train(model, data_loader, hyperparams=nn_config, epochs=nn_config['epochs'])
 
-    print(model.modules())
+    print()
+    print(nn_config)
+    for module in model.modules():
+        print(module)
+
     training_duration = time.time() - start
 
     x_train, y_train = next(iter(data_loader['train_metrics']))
@@ -644,101 +648,117 @@ def generate_nn_configs():
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 14], [14, 1]],
-        'model_depth': 2
+        'hidden_layer_width': [[11, 20], [20, 1]],
+        'model_depth': 2,
+        'epochs': 10
     })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.001,
-        'hidden_layer_width': [[11, 14], [14, 1]],
-        'model_depth': 2
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.0001,
-        'hidden_layer_width': [[11, 17], [17, 1]],
-        'model_depth': 2
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.001,
-        'hidden_layer_width': [[11, 17], [17, 1]],
-        'model_depth': 2
-    })
-
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
         'hidden_layer_width': [[11, 20], [20, 1]],
-        'model_depth': 2
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.001,
-        'hidden_layer_width': [[11, 20], [20, 1]],
-        'model_depth': 2
+        'model_depth': 2,
+        'epochs': 20
     })
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 24], [24, 1]],
-        'model_depth': 2
+        'hidden_layer_width': [[11, 5], [5, 1]],
+        'model_depth': 2,
+        'epochs': 10
     })
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 24], [24, 1]],
-        'model_depth': 2
+        'hidden_layer_width': [[11, 5], [5, 1]],
+        'model_depth': 2,
+        'epochs': 20
     })
 
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 33], [33, 10], [10, 1]],
-        'model_depth': 3
+        'hidden_layer_width': [[11, 8], [8, 1]],
+        'model_depth': 2,
+        'epochs': 10
     })
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 33], [33, 5], [5, 1]],
-        'model_depth': 3
+        'hidden_layer_width': [[11, 8], [8, 1]],
+        'model_depth': 2,
+        'epochs': 20
     })
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 25], [25, 14], [14, 1]],
-        'model_depth': 3
+        'hidden_layer_width': [[11, 8], [8, 5], [5, 1]],
+        'model_depth': 3,
+        'epochs': 20
     })
     configs.append({
         'optimiser': 'SGD',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 16], [16, 23], [23, 1]],
-        'model_depth': 3
+        'hidden_layer_width': [[11, 13], [13, 8], [8, 1]],
+        'model_depth': 3,
+        'epochs': 20
     })
 
     configs.append({
         'optimiser': 'SGD',
-        'lr': 0.0001,
-        'hidden_layer_width': [[11, 40], [40, 7], [7, 1]],
-        'model_depth': 3
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.001,
-        'hidden_layer_width': [[11, 35], [35, 14], [14, 1]],
-        'model_depth': 3
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.0001,
+        'lr': 0.00001,
         'hidden_layer_width': [[11, 22], [22, 11], [11, 1]],
-        'model_depth': 3
+        'model_depth': 3,
+        'epochs': 75
     })
     configs.append({
         'optimiser': 'SGD',
-        'lr': 0.001,
-        'hidden_layer_width': [[11, 22], [22, 8], [8, 1]],
-        'model_depth': 3
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 28], [28, 21], [21, 1]],
+        'model_depth': 3,
+        'epochs': 75
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 28], [28, 5], [5, 1]],
+        'model_depth': 3,
+        'epochs': 75
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 13], [13, 8], [8, 3], [3, 1]],
+        'model_depth': 4,
+        'epochs': 75
+    })
+
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 16], [16, 13], [13, 8], [8, 1]],
+        'model_depth': 4,
+        'epochs': 75
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 13], [13, 10], [10, 6], [6, 3], [3, 1]],
+        'model_depth': 5,
+        'epochs': 75
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 13], [13, 6], [6, 10], [10, 5], [5, 1]],
+        'model_depth': 5,
+        'epochs': 75
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.00001,
+        'hidden_layer_width': [[11, 16], [16, 11], [11, 7], [7, 3], [3, 1]],
+        'model_depth': 5,
+        'epochs': 75
     })
 
     return configs
@@ -780,7 +800,7 @@ def find_best_nn():
     best_validation_score = np.inf
     for config in configs:
         model = NNRegression(config=config)
-        model_metrics = evaluate_nn(model, data_loaders, config, 40)
+        model_metrics = evaluate_nn(model, data_loaders, config)
         save_nn(model, config, model_metrics)
 
         if model_metrics['RMSE_loss']['validation'] < best_validation_score:
@@ -789,17 +809,18 @@ def find_best_nn():
             best_config = config
             best_metrics = model_metrics
 
+        time.sleep(1)
+
     return best_model, best_config, best_metrics
 
 
 if __name__ == "__main__":
 
-
     best_model, best_config, best_metrics = find_best_nn()
 
     folder_path = os.path.join(os.getcwd(), 'models/neural_networks/regression/best_model')
     save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
-    
+
     # nn_config = get_nn_config()
     # data = AirbnbNightlyPriceImageDataset()
 
@@ -834,7 +855,7 @@ if __name__ == "__main__":
 
     # model = NNRegression(config=nn_config)
 
-    # model_metrics = evaluate_nn(model, data_loaders, nn_config, 40)
+    # model_metrics = evaluate_nn(model, data_loaders, nn_config)
 
     # print()
     # print(model_metrics)

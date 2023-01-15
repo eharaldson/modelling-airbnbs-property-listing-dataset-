@@ -1,0 +1,1 @@
+{"optimiser": "SGD", "lr": 1e-05, "hidden_layer_width": [[11, 13], [13, 10], [10, 6], [6, 3], [3, 1]], "model_depth": 5, "epochs": 75}

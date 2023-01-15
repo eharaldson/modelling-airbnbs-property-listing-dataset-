@@ -1,4 +1,5 @@
 optimiser: SGD
-lr: 0.0001
-hidden_layer_width: [[11, 45], [45, 23], [23, 7], [7, 1]]
-model_depth: 4
+lr: 0.00001
+hidden_layer_width: [[11, 20], [14, 1]]
+model_depth: 2
+epochs: 75

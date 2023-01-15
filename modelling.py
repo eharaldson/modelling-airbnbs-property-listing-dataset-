@@ -1,5 +1,5 @@
 from tabular_data import load_airbnb
-from pytorch_datasets import AirbnbNightlyPriceImageDataset
+from pytorch_datasets import AirbnbNightlyPriceImageDataset, AirbnbCategoryImageDataset
 
 from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, gaussian_process
 from torch.utils.data import random_split
@@ -513,6 +513,23 @@ class NNRegression(torch.nn.Module):
     def forward(self, features):
         return self.layers(features)
 
+# Neural Network model class
+class NNClassification(torch.nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+        layer_widths = config['hidden_layer_width']
+        modules = []
+        for i in range(config['model_depth']):
+            modules.append(torch.nn.Linear(in_features=layer_widths[i][0], out_features=layer_widths[i][1]))
+            if i < config['model_depth']-1:
+                modules.append(torch.nn.ReLU())
+        modules.append(torch.nn.Softmax())
+        self.layers = torch.nn.Sequential(*modules)
+    
+    def forward(self, features):
+        return self.layers(features)
+
 # Function to get the instance of the optimiser class from the name
 def get_optimiser_from_name(model, name, lr):
     if name == 'Adam':
@@ -543,7 +560,7 @@ def get_optimiser_from_name(model, name, lr):
         return torch.optim.SGD(params=model.parameters(), lr=lr)
 
 # Function to train a neural network
-def train(model, dataloader, hyperparams, epochs=10):
+def train(model, dataloader, hyperparams, regression = True):
 
     optimiser = get_optimiser_from_name(model=model, name=hyperparams['optimiser'], lr=hyperparams['lr'])
 
@@ -551,18 +568,26 @@ def train(model, dataloader, hyperparams, epochs=10):
 
     batch_index = 0
 
-    for epoch in range(epochs):
+    for epoch in range(hyperparams['epochs']):
         for batch in dataloader['train']:
             features, labels = batch
             predictions = model(features)
-            loss = F.mse_loss(predictions, labels)
+
+            if regression == False:
+                loss = F.cross_entropy(predictions, labels)
+            else:
+                loss = F.mse_loss(predictions, labels)
+
             loss.backward()
             optimiser.step()
             optimiser.zero_grad()
 
             val_features, val_labels = next(iter(dataloader['validation']))
             val_predictions = model(val_features)
-            val_loss = F.mse_loss(val_predictions, val_labels)
+            if regression == False:
+                val_loss = F.cross_entropy(val_predictions, val_labels)
+            else:
+                val_loss = F.mse_loss(val_predictions, val_labels)
 
             writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
             writer.add_scalar(tag='Validation Loss', scalar_value=val_loss.item(), global_step=batch_index)
@@ -580,12 +605,7 @@ def get_nn_config():
 def evaluate_nn(model, data_loader, nn_config):
 
     start = time.time()
-    train(model, data_loader, hyperparams=nn_config, epochs=nn_config['epochs'])
-
-    print()
-    print(nn_config)
-    for module in model.modules():
-        print(module)
+    train(model, data_loader, hyperparams=nn_config, regression=True)
 
     training_duration = time.time() - start
 
@@ -617,6 +637,52 @@ def evaluate_nn(model, data_loader, nn_config):
             'train': float(train_r2),
             'validation': float(validation_r2),
             'test': float(test_r2)
+        },
+        'training_duration': training_duration,
+        'inference_latency': inference_latency
+    }
+
+    return metrics_dictionary
+
+# Evaluates the classification neural networks metrics
+def evaluate_nn_classification(model, data_loader, nn_config):
+
+    start = time.time()
+    train(model, data_loader, hyperparams=nn_config, regression=False)
+
+    training_duration = time.time() - start
+
+    x_train, y_train = next(iter(data_loader['train_metrics']))
+    x_validation, y_validation = next(iter(data_loader['validation']))
+    x_test, y_test = next(iter(data_loader['test']))
+
+    start = time.time()
+    train_predictions = model(x_train)
+    validation_predictions = model(x_validation)
+    test_predictions = model(x_test)
+    inference_latency = (time.time() - start) / (len(x_train) + len(x_validation) + len(x_test))
+
+    train_predictions = np.argmax(train_predictions.detach().numpy(), axis=1)
+    validation_predictions = np.argmax(validation_predictions.detach().numpy(), axis=1)
+    test_predictions = np.argmax(test_predictions.detach().numpy(), axis=1)    
+
+    train_accuracy = metrics.accuracy_score(y_train.numpy(), train_predictions)
+    train_f1 = metrics.f1_score(y_train.numpy(), train_predictions, average='macro')
+    validation_accuracy = metrics.accuracy_score(y_validation.numpy(), validation_predictions)
+    validation_f1 = metrics.f1_score(y_validation.numpy(), validation_predictions, average='macro')
+    test_accuracy = metrics.accuracy_score(y_test.numpy(), test_predictions)
+    test_f1 = metrics.f1_score(y_test.numpy(), test_predictions, average='macro')
+
+    metrics_dictionary = {
+        'accuracy': {
+            'train': float(train_accuracy),
+            'validation': float(validation_accuracy),
+            'test': float(test_accuracy)
+        },
+        'f1': {
+            'train': float(train_f1),
+            'validation': float(validation_f1),
+            'test': float(test_f1)
         },
         'training_duration': training_duration,
         'inference_latency': inference_latency
@@ -813,53 +879,103 @@ def find_best_nn():
 
     return best_model, best_config, best_metrics
 
+def find_best_nn_classification():
+    configs = generate_nn_configs()
+
+    data = AirbnbCategoryImageDataset()
+
+    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
+    batch_size = 64
+    data_loaders = {
+        'train': torch.utils.data.DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'train_metrics': torch.utils.data.DataLoader(
+            train_data,
+            batch_size=len(train_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'validation': torch.utils.data.DataLoader(
+            validation_data,
+            batch_size=len(validation_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'test': torch.utils.data.DataLoader(
+            test_data,
+            batch_size=len(test_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        )
+    }
+
+    best_validation_score = 0
+    for config in configs:
+
+        model = NNClassification(config=config)
+        model_metrics = evaluate_nn_classification(model, data_loaders, config)
+        save_nn(model, config, model_metrics, regression=False)
+
+        if model_metrics['accuracy']['validation'] > best_validation_score:
+            best_validation_score = model_metrics['accuracy']['validation']
+            best_model = model
+            best_config = config
+            best_metrics = model_metrics
+
+        time.sleep(1)
+
+    return best_model, best_config, best_metrics
 
 if __name__ == "__main__":
 
-    best_model, best_config, best_metrics = find_best_nn()
+    # best_model, best_config, best_metrics = find_best_nn_classification()
 
-    folder_path = os.path.join(os.getcwd(), 'models/neural_networks/regression/best_model')
-    save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
+    # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/classification/best_model')
+    # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
-    # nn_config = get_nn_config()
-    # data = AirbnbNightlyPriceImageDataset()
+    nn_config = get_nn_config()
+    data = AirbnbCategoryImageDataset()
 
-    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
-    # batch_size = 64
-    # data_loaders = {
-    #     'train': torch.utils.data.DataLoader(
-    #         train_data,
-    #         batch_size=batch_size,
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     ),
-    #     'train_metrics': torch.utils.data.DataLoader(
-    #         train_data,
-    #         batch_size=len(train_data),
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     ),
-    #     'validation': torch.utils.data.DataLoader(
-    #         validation_data,
-    #         batch_size=len(validation_data),
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     ),
-    #     'test': torch.utils.data.DataLoader(
-    #         test_data,
-    #         batch_size=len(test_data),
-    #         shuffle=True,
-    #         pin_memory=torch.cuda.is_available(),
-    #     )
-    # }
+    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
+    batch_size = 64
+    data_loaders = {
+        'train': torch.utils.data.DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'train_metrics': torch.utils.data.DataLoader(
+            train_data,
+            batch_size=len(train_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'validation': torch.utils.data.DataLoader(
+            validation_data,
+            batch_size=len(validation_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        'test': torch.utils.data.DataLoader(
+            test_data,
+            batch_size=len(test_data),
+            shuffle=True,
+            pin_memory=torch.cuda.is_available(),
+        )
+    }
 
-    # model = NNRegression(config=nn_config)
+    model = NNClassification(config=nn_config)
 
-    # model_metrics = evaluate_nn(model, data_loaders, nn_config)
+    model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
 
-    # print()
-    # print(model_metrics)
-    # print()
+    print()
+    print(model_metrics)
+    print()
 
     # save_nn(model, nn_config, model_metrics)
     

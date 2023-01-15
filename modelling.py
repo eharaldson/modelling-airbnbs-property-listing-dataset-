@@ -937,45 +937,46 @@ if __name__ == "__main__":
     # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/classification/best_model')
     # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
-    nn_config = get_nn_config()
+    # nn_config = get_nn_config()
     data = AirbnbCategoryImageDataset()
 
-    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
-    batch_size = 64
-    data_loaders = {
-        'train': torch.utils.data.DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'train_metrics': torch.utils.data.DataLoader(
-            train_data,
-            batch_size=len(train_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'validation': torch.utils.data.DataLoader(
-            validation_data,
-            batch_size=len(validation_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'test': torch.utils.data.DataLoader(
-            test_data,
-            batch_size=len(test_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        )
-    }
+    print(data[0])
 
-    model = NNClassification(config=nn_config)
+    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
+    # batch_size = 64
+    # data_loaders = {
+    #     'train': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=batch_size,
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'train_metrics': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=len(train_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'validation': torch.utils.data.DataLoader(
+    #         validation_data,
+    #         batch_size=len(validation_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'test': torch.utils.data.DataLoader(
+    #         test_data,
+    #         batch_size=len(test_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     )
+    # }
 
-    model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
+    # model = NNClassification(config=nn_config)
 
-    print()
-    print(model_metrics)
-    print()
+    # model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
+
+    # print()
+    # print(model_metrics)
+    # print()
 
     # save_nn(model, nn_config, model_metrics)
-    

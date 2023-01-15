@@ -2,7 +2,7 @@ from ast import literal_eval
 
 import pandas as pd
 import numpy as np
-
+from sklearn import preprocessing
 import os
 
 def remove_rows_with_missing_ratings(df_null):
@@ -35,11 +35,26 @@ def clean_tabular_data(df):
     df = df.reset_index(drop=True)
     return df
 
+def to_one_hot(labels, max_labels: int = None):
+    if max_labels is None:
+        max_labels = np.max(labels) + 1
+    return np.eye(max_labels)[labels]
+
 def load_airbnb(label_name='Price_Night'):
     cwd = os.getcwd()
     df = pd.read_csv(os.path.join(cwd, 'data/tabular_data/clean_listing.csv'), index_col='ID')
     labels = df[[label_name]]
-    features = df.drop(label_name, axis=1).select_dtypes('number')
+    features = df.drop(label_name, axis=1, inplace=False).select_dtypes('number')
+    if label_name == 'bedrooms':
+        le = preprocessing.LabelEncoder()
+        le.fit(df['Category'])
+        category_column = le.transform(df['Category'])
+
+        ohe_column = to_one_hot(category_column)[:,1:]
+        features['category1'] = ohe_column[:,0]
+        features['category2'] = ohe_column[:,1]
+        features['category3'] = ohe_column[:,2]
+        features['category4'] = ohe_column[:,3]
     return (features, labels)
 
 if __name__ == "__main__":

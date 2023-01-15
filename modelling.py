@@ -552,14 +552,20 @@ def train(model, dataloader, hyperparams, epochs=10):
     batch_index = 0
 
     for epoch in range(epochs):
-        for batch in dataloader:
+        for batch in dataloader['train']:
             features, labels = batch
             predictions = model(features)
             loss = F.mse_loss(predictions, labels)
             loss.backward()
             optimiser.step()
             optimiser.zero_grad()
+
+            val_features, val_labels = next(iter(dataloader['validation']))
+            val_predictions = model(val_features)
+            val_loss = F.mse_loss(val_predictions, val_labels)
+
             writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
+            writer.add_scalar(tag='Validation Loss', scalar_value=val_loss.item(), global_step=batch_index)
             batch_index += 1
 
 # Function that reads the nn config yaml file and returns a dictionary
@@ -574,8 +580,9 @@ def get_nn_config():
 def evaluate_nn(model, data_loader, nn_config, epochs=10):
 
     start = time.time()
-    train(model, data_loader['train'], hyperparams=nn_config, epochs=epochs)
+    train(model, data_loader, hyperparams=nn_config, epochs=epochs)
 
+    print(model.modules())
     training_duration = time.time() - start
 
     x_train, y_train = next(iter(data_loader['train_metrics']))
@@ -588,48 +595,159 @@ def evaluate_nn(model, data_loader, nn_config, epochs=10):
     test_predictions = model(x_test)
     inference_latency = (time.time() - start) / (len(x_train) + len(x_validation) + len(x_test))
 
-    train_rmse = torch.sqrt(F.mse_loss(train_predictions, y_train))
+    train_rmse = metrics.mean_squared_error(y_train.numpy(), train_predictions.detach().numpy(), squared=False)
     train_r2 = metrics.r2_score(y_train.numpy(), train_predictions.detach().numpy())
-    validation_rmse = torch.sqrt(F.mse_loss(validation_predictions, y_validation))
+    validation_rmse = metrics.mean_squared_error(y_validation.numpy(), validation_predictions.detach().numpy(), squared=False)
     validation_r2 = metrics.r2_score(y_validation.numpy(), validation_predictions.detach().numpy())
-    test_rmse = torch.sqrt(F.mse_loss(test_predictions, y_test))
+    test_rmse = metrics.mean_squared_error(y_test.numpy(), test_predictions.detach().numpy(), squared=False)
     test_r2 = metrics.r2_score(y_test.numpy(), test_predictions.detach().numpy())
 
-    return {
+
+    metrics_dictionary = {
         'RMSE_loss': {
-            'train': np.float32(train_rmse),
-            'validation': np.float32(validation_rmse),
-            'test': np.float32(test_rmse)
+            'train': float(train_rmse),
+            'validation': float(validation_rmse),
+            'test': float(test_rmse)
         },
         'R_squared': {
-            'train': np.float32(train_r2),
-            'validation': np.float32(validation_r2),
-            'test': np.float32(test_r2)
+            'train': float(train_r2),
+            'validation': float(validation_r2),
+            'test': float(test_r2)
         },
         'training_duration': training_duration,
         'inference_latency': inference_latency
     }
+
+    return metrics_dictionary
 
 # Create a folder with the current time in the name to then save a neural network model
 def save_nn(model, hyperparams, metrics, regression=True):
 
     cwd = os.getcwd()
     if regression == True:
-        folder_path = os.path.joint(cwd, 'models/neural_networks/regression')
+        folder_path = os.path.join(cwd, 'models/neural_networks/regression')
     else:
-        folder_path = os.path.joint(cwd, 'models/neural_networks/classification')
+        folder_path = os.path.join(cwd, 'models/neural_networks/classification')
 
     now = datetime.now()
     current_time = now.strftime("%Y-%m-%d_%H:%M:%S")
-    folder_path = os.path.joint(folder_path, current_time)
+    folder_path = os.path.join(folder_path, current_time)
+
+    os.mkdir(folder_path)
 
     save_model(folder=folder_path, model=model, model_hyperparameters=hyperparams, model_score_metrics=metrics)
 
-if __name__ == "__main__":
+# Generates 16 different configuration settings of a neural network
+def generate_nn_configs():
 
-    nn_config = get_nn_config()
+    configs = []
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 14], [14, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.001,
+        'hidden_layer_width': [[11, 14], [14, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 17], [17, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.001,
+        'hidden_layer_width': [[11, 17], [17, 1]],
+        'model_depth': 2
+    })
+
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 20], [20, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.001,
+        'hidden_layer_width': [[11, 20], [20, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 24], [24, 1]],
+        'model_depth': 2
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 24], [24, 1]],
+        'model_depth': 2
+    })
+
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 33], [33, 10], [10, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 33], [33, 5], [5, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 25], [25, 14], [14, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 16], [16, 23], [23, 1]],
+        'model_depth': 3
+    })
+
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 40], [40, 7], [7, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.001,
+        'hidden_layer_width': [[11, 35], [35, 14], [14, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 22], [22, 11], [11, 1]],
+        'model_depth': 3
+    })
+    configs.append({
+        'optimiser': 'SGD',
+        'lr': 0.001,
+        'hidden_layer_width': [[11, 22], [22, 8], [8, 1]],
+        'model_depth': 3
+    })
+
+    return configs
+
+# Finds the best neural network model
+def find_best_nn():
+    configs = generate_nn_configs()
+
     data = AirbnbNightlyPriceImageDataset()
-
     train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
     batch_size = 64
     data_loaders = {
@@ -659,9 +777,68 @@ if __name__ == "__main__":
         )
     }
 
-    model = NNRegression(config=nn_config)
+    best_validation_score = np.inf
+    for config in configs:
+        model = NNRegression(config=config)
+        model_metrics = evaluate_nn(model, data_loaders, config, 40)
+        save_nn(model, config, model_metrics)
 
-    model_metrics = evaluate_nn(model, data_loaders, nn_config, 20)
+        if model_metrics['RMSE_loss']['validation'] < best_validation_score:
+            best_validation_score = model_metrics['RMSE_loss']['validation']
+            best_model = model
+            best_config = config
+            best_metrics = model_metrics
 
-    save_nn(model, nn_config, model_metrics)
+    return best_model, best_config, best_metrics
+
+
+if __name__ == "__main__":
+
+
+    best_model, best_config, best_metrics = find_best_nn()
+
+    folder_path = os.path.join(os.getcwd(), 'models/neural_networks/regression/best_model')
+    save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
+    
+    # nn_config = get_nn_config()
+    # data = AirbnbNightlyPriceImageDataset()
+
+    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
+    # batch_size = 64
+    # data_loaders = {
+    #     'train': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=batch_size,
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'train_metrics': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=len(train_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'validation': torch.utils.data.DataLoader(
+    #         validation_data,
+    #         batch_size=len(validation_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'test': torch.utils.data.DataLoader(
+    #         test_data,
+    #         batch_size=len(test_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     )
+    # }
+
+    # model = NNRegression(config=nn_config)
+
+    # model_metrics = evaluate_nn(model, data_loaders, nn_config, 40)
+
+    # print()
+    # print(model_metrics)
+    # print()
+
+    # save_nn(model, nn_config, model_metrics)
     

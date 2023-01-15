@@ -166,3 +166,30 @@ GradientBoostingClassifier(max_depth=1,
 - For this model the mean validation accuracy score is 0.401. This accuracy is better than logistic regression which achieved a mean validation accuracy score of 0.389 but it is still quite low and would not constitute a usable model. The model is clearly better than a random guesser; which since there are 5 classes would tend to achieve an accuracy score of 0.2, however it is still a very low accuracy. Hopefully the neural network used later on will be able to achieve better scores than the classifier models used so far.
 
 - In the future I would like to look more at using a neural network for classification as well as a Naive Bayes classification model.
+
+### Neural networks
+
+- To get familiar with neural networks, I have made functions so that I can pass in the hyperparameters for a neural network: epochs, learning rate, model depth and layer widths. With these configuration settings the code creates a neural network with the correpsonding layers (which are all linear in this case) and ReLU activations after each layer.
+
+- I created 16 different architectures for possible neural networks, ranging from a 2 layer architecture to a 5 layer architecture. In turn, each model was trained on the same train data and the root mean squared error and r^2 score were calculated for the train, validation and test set but only the validation rmse was used to compare the models.
+
+- The loss function used when training all the models was the mean squared error. The following is a tensorboard plot of the loss for all the runs:
+
+![alt text](./readme_images/loss_all.png)
+
+- I thought it would be interesting to plot the validation loss aswell to see if a model would start to overfit and the following is the validation set's loss for all models:
+
+![alt text](./readme_images/validation_loss_all.png)
+
+- The model with the best validation score was 4 layer network with the nodes at each hidden layer being: 16, 13, 8. A visualisation of the model architecture is seen below:
+
+![alt text](./readme_images/architecture_best.png)
+
+- The training and validation loss for this architecture is plotted below:
+
+![alt text](./readme_images/loss_best.png)
+![alt text](./readme_images/validation_loss_best.png)
+
+- The root mean squared error for this architecture was 86.39 for the validation set and 99.23 for the test set. The R^2 values were 0.412 and 0.487 respectively. 
+
+- Whilst this is an improvement on any regression model tested so far, it is still a bad model and would not be useful in a real setting. Seeing as no model has been able to predict the nightly price with any accuracy it may be that the features picked out for these calculations are not useful for this task and there should be some reworking done to select better features.

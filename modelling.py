@@ -571,10 +571,10 @@ def get_nn_config():
             print(exc)
 
 # Evaluates the neural networks metrics
-def evaluate_nn(model, data_loader, nn_config):
+def evaluate_nn(model, data_loader, nn_config, epochs=10):
 
     start = time.time()
-    train(model, data_loader['train'], hyperparams=nn_config)
+    train(model, data_loader['train'], hyperparams=nn_config, epochs=epochs)
 
     training_duration = time.time() - start
 
@@ -660,11 +660,8 @@ if __name__ == "__main__":
     }
 
     model = NNRegression(config=nn_config)
-    train(model, data_loaders['train'], hyperparams=nn_config, epochs=30)
 
-    predictions = model(next(iter(data_loaders['validation']))[0]).detach().numpy()
-    y_true = next(iter(data_loaders['validation']))[1].numpy()
-    print([predictions[:10], y_true[:10]])
+    model_metrics = evaluate_nn(model, data_loaders, nn_config, 20)
 
-    rmse = metrics.mean_squared_error(y_true, predictions, squared=False)
-    print(rmse)
+    save_nn(model, nn_config, model_metrics)
+    

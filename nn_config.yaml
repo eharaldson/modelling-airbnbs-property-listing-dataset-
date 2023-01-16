@@ -1,5 +1,5 @@
-optimiser: SGD
+optimiser: Adam
 lr: 0.0001
-hidden_layer_width: [[15, 20], [20, 9]]
-model_depth: 2
-epochs: 10
+hidden_layer_width: [[15, 30], [30, 24], [24, 9]]
+model_depth: 3
+epochs: 800

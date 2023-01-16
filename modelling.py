@@ -524,7 +524,7 @@ class NNClassification(torch.nn.Module):
             modules.append(torch.nn.Linear(in_features=layer_widths[i][0], out_features=layer_widths[i][1]))
             if i < config['model_depth']-1:
                 modules.append(torch.nn.ReLU())
-        modules.append(torch.nn.Softmax())
+        modules.append(torch.nn.Softmax(dim=0))
         self.layers = torch.nn.Sequential(*modules)
     
     def forward(self, features):
@@ -574,8 +574,6 @@ def train(model, dataloader, hyperparams, regression = True):
             predictions = model(features)
 
             if regression == False:
-                print(predictions)
-                print(labels)
                 loss = F.cross_entropy(predictions, labels.long())
             else:
                 loss = F.mse_loss(predictions, labels)

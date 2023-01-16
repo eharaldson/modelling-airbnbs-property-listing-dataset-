@@ -26,16 +26,23 @@ class AirbnbCategoryImageDataset(Dataset):
 
     def __init__(self):
         super().__init__()
-        X, self.y = load_airbnb(label_name='bedrooms')
+        X, y = load_airbnb(label_name='bedrooms')
+        self._scale_data(X)
+        self._encode_labels(y)
+
+    def _encode_labels(self, y):
+        le = preprocessing.LabelEncoder()
+        self.y = le.fit_transform(np.ravel(y))
+
+    def _scale_data(self, X):
         categories = X[['category1', 'category2', 'category3', 'category4']]
         X.drop(['category1', 'category2', 'category3', 'category4'], axis=1, inplace=True)
         scaler = preprocessing.StandardScaler()
-        scaler.fit(X)
-        X = scaler.transform(X)
+        X = scaler.fit_transform(X)
         self.X = np.concatenate((X, categories), axis=1)
 
     def __getitem__(self, index) -> tuple[torch.tensor, torch.tensor]:
-        return (torch.tensor(self.X[index]).float(), torch.tensor(self.y.iloc[index]))
+        return (torch.tensor(self.X[index]).float(), torch.tensor(self.y[index]))
 
     def __len__(self) -> int:
         return len(self.y)

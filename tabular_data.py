@@ -47,9 +47,7 @@ def load_airbnb(label_name='Price_Night'):
     features = df.drop(label_name, axis=1, inplace=False).select_dtypes('number')
     if label_name == 'bedrooms':
         le = preprocessing.LabelEncoder()
-        le.fit(df['Category'])
-        category_column = le.transform(df['Category'])
-
+        category_column = le.fit_transform(df['Category'])
         ohe_column = to_one_hot(category_column)[:,1:]
         features['category1'] = ohe_column[:,0]
         features['category2'] = ohe_column[:,1]

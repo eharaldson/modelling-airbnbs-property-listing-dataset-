@@ -213,3 +213,24 @@ def early_stopping(validation_losses, stop_criteria = 200):
 - Whilst this is an improvement on any regression model tested so far, it is still a bad model and would not be useful in a real setting. Seeing as no model has been able to predict the nightly price with any accuracy it may be that the features picked out for these calculations are not useful for this task and there should be some reworking done to select better features.
 
 ## Classification
+- To experiment with classification using neural networks the dataset that was used had the normal numerical features from before with the addition of the category feature (which was originally the target for the sklearn classification models) which has been one hot encoded (and 1 column dropped). The lable for this dataset is the number of bedrooms for the listing.
+
+- The same methodology as in the regression case was used; this led to a decision to test 16 architectures of 5 and 6 layers (all linear with a ReLU activation and ended with a SoftMax layer). The accuracy and f1 score for the train, validation, and test data sets was calculated for each model and the validation set accuracy score was used to pick the best model.
+
+- The train and validation loss for all the architectures is plotted below:
+
+![alt text](./readme_images/loss_all_class.png)
+![alt text](./readme_images/validation_loss_all_class.png)
+
+- The best model architecture had a depth of 5 layers with the hidden layers having a depth of: 128, 256, 64, 32. This model achieved a accuracy score of 0.887 on the train set and 0.887 on the validation set with corresponding f1 scores (`sklearn.metrics.fi_score(..., average='macro', multiclass='ovr)); 0.416 and 0.567.
+
+- The train and validation loss for this model is plotted below:
+
+![alt text](./readme_images/loss_best_class.png)
+![alt text](./readme_images/validation_loss_best_class.png)
+
+- This model shows very good performance on the validation data set and is likely a very good model to use for this task.
+
+- Compared to the previous classification task that was looking at a different label (Category) for the data set; this classification model was a lot better than the different sklearn models. The reason for this is likely due to the features available which include: beds, bathrooms, nightly price, and several different ratings. These features do not have enough predicting power for the category label which includes: treehouses, chalets, Amazing pools, offbeat, beachfront. However when predicting the number of bedrooms, features like the number of beds and bathrooms as well as nighlty price will have higher predicting powers.
+
+- One thing to note is that the dataset is very unbalanced with 1 bedroom being the label for 61% and 1 and 2 bedrooms together make up 84% of the dataset.

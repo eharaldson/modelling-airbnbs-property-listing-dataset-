@@ -1,0 +1,1 @@
+{"optimiser": "Adam", "lr": 0.0001, "hidden_layer_width": [[15, 128], [128, 256], [256, 64], [64, 16], [16, 9]], "model_depth": 5, "epochs": 800}

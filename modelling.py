@@ -1,4 +1,4 @@
-from tabular_data import load_airbnb
+from tabular_data import load_airbnb, to_one_hot
 from pytorch_datasets import AirbnbNightlyPriceImageDataset, AirbnbCategoryImageDataset
 
 from sklearn import linear_model, model_selection, metrics, preprocessing, tree, ensemble, svm, neighbors, gaussian_process
@@ -524,7 +524,7 @@ class NNClassification(torch.nn.Module):
             modules.append(torch.nn.Linear(in_features=layer_widths[i][0], out_features=layer_widths[i][1]))
             if i < config['model_depth']-1:
                 modules.append(torch.nn.ReLU())
-        modules.append(torch.nn.Softmax(dim=0))
+        modules.append(torch.nn.Softmax(dim=-1))
         self.layers = torch.nn.Sequential(*modules)
     
     def forward(self, features):
@@ -564,7 +564,6 @@ def early_stopping(validation_losses, stop_criteria = 200):
     if len(validation_losses) > stop_criteria:
         average = np.mean(validation_losses[-stop_criteria:])
         if average < validation_losses[-1]:
-            print(average, validation_losses[-1])
             return True
         else:
             return False
@@ -610,7 +609,7 @@ def train(model, dataloader, hyperparams, regression = True):
             writer.add_scalar(tag='Validation Loss', scalar_value=val_loss.item(), global_step=batch_index)
             batch_index += 1
 
-            early_stop = early_stopping(validation_losses=validation_losses, stop_criteria=400)
+            early_stop = early_stopping(validation_losses=validation_losses, stop_criteria=1000)
             if early_stop == True:
                 break
         if early_stop == True:
@@ -686,14 +685,14 @@ def evaluate_nn_classification(model, data_loader, nn_config):
     x_test, y_test = next(iter(data_loader['test']))
 
     start = time.time()
-    train_predictions = model(x_train)
-    validation_predictions = model(x_validation)
-    test_predictions = model(x_test)
+    train_predictions_proba = model(x_train)
+    validation_predictions_proba = model(x_validation)
+    test_predictions_proba = model(x_test)
     inference_latency = (time.time() - start) / (len(x_train) + len(x_validation) + len(x_test))
 
-    train_predictions = np.argmax(train_predictions.detach().numpy(), axis=1)
-    validation_predictions = np.argmax(validation_predictions.detach().numpy(), axis=1)
-    test_predictions = np.argmax(test_predictions.detach().numpy(), axis=1)    
+    train_predictions = np.argmax(train_predictions_proba.detach().numpy(), axis=1)
+    validation_predictions = np.argmax(validation_predictions_proba.detach().numpy(), axis=1)
+    test_predictions = np.argmax(test_predictions_proba.detach().numpy(), axis=1)    
 
     train_accuracy = metrics.accuracy_score(y_train.numpy(), train_predictions)
     train_f1 = metrics.f1_score(y_train.numpy(), train_predictions, average='macro')
@@ -746,28 +745,28 @@ def generate_nn_configs():
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 128], [128, 512], [512, 128], [128, 64], [64, 32], [32, 16], [16, 1]],
-        'model_depth': 7,
+        'hidden_layer_width': [[15, 32], [32, 64], [64, 32], [32, 16], [16, 9]],
+        'model_depth': 5,
         'epochs': epoch_total
     })    
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 64], [64, 128], [128, 64], [64, 32], [32, 16], [16, 8], [8, 1]],
-        'model_depth': 7,
+        'hidden_layer_width': [[15, 64], [64, 128], [128, 64], [64, 32], [32, 9]],
+        'model_depth': 5,
         'epochs': epoch_total
     })
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 32], [32, 128], [128, 64], [64, 32], [32, 16], [16, 8], [8, 1]],
-        'model_depth': 7,
+        'hidden_layer_width': [[15, 64], [64, 128], [128, 64], [64, 32], [32, 16], [16, 9]],
+        'model_depth': 6,
         'epochs': epoch_total
     })    
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 16], [16, 32], [32, 16], [16, 8], [8, 4], [4, 1]],
+        'hidden_layer_width': [[15, 32], [32, 128], [128, 64], [64, 32], [32, 16], [16, 9]],
         'model_depth': 6,
         'epochs': epoch_total
     })
@@ -775,29 +774,87 @@ def generate_nn_configs():
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 64], [64, 256], [256, 128], [128, 32], [32, 16], [16, 1]],
+        'hidden_layer_width': [[15, 64], [64, 128], [128, 32], [32, 16], [16, 9]],
+        'model_depth': 5,
+        'epochs': epoch_total
+    })    
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 128], [128, 256], [256, 64], [64, 32], [32, 9]],
+        'model_depth': 5,
+        'epochs': epoch_total
+    })
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 128], [128, 256], [256, 128], [128, 32], [32, 16], [16, 9]],
         'model_depth': 6,
         'epochs': epoch_total
     })    
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 16], [16, 32], [32, 8], [8, 1]],
-        'model_depth': 4,
+        'hidden_layer_width': [[15, 128], [128, 256], [256, 128], [128, 64], [64, 16], [16, 9]],
+        'model_depth': 6,
         'epochs': epoch_total
     })
+
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 32], [32, 64], [64, 16], [16, 1]],
-        'model_depth': 4,
+        'hidden_layer_width': [[15, 128], [128, 512], [512, 128], [128, 32], [32, 9]],
+        'model_depth': 5,
         'epochs': epoch_total
     })    
     configs.append({
         'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 64], [64, 128], [128, 64], [64, 16], [16, 1]],
+        'hidden_layer_width': [[15, 128], [128, 256], [256, 64], [64, 16], [16, 9]],
         'model_depth': 5,
+        'epochs': epoch_total
+    })
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 128], [128, 512], [512, 128], [128, 32], [32, 16], [16, 9]],
+        'model_depth': 6,
+        'epochs': epoch_total
+    })    
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 128], [128, 512], [512, 256], [256, 64], [64, 16], [16, 9]],
+        'model_depth': 6,
+        'epochs': epoch_total
+    })
+
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 256], [256, 512], [512, 128], [128, 64], [64, 9]],
+        'model_depth': 5,
+        'epochs': epoch_total
+    })    
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 256], [256, 512], [512, 256], [256, 32], [32, 9]],
+        'model_depth': 5,
+        'epochs': epoch_total
+    })
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 256], [256, 512], [512, 128], [128, 32], [32, 16], [16, 9]],
+        'model_depth': 6,
+        'epochs': epoch_total
+    })    
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[15, 256], [256, 1024], [1024, 256], [256, 64], [64, 16], [16, 9]],
+        'model_depth': 6,
         'epochs': epoch_total
     })
 
@@ -907,19 +964,19 @@ def find_best_nn_classification():
 
 if __name__ == "__main__":
 
-    # best_model, best_config, best_metrics = find_best_nn_classification()
+    best_model, best_config, best_metrics = find_best_nn_classification()
 
-    # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/classification/best_model')
-    # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
+    folder_path = os.path.join(os.getcwd(), 'models/neural_networks/classification/best_model')
+    save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
     # best_model, best_config, best_metrics = find_best_nn()
 
     # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/regression/best_model')
     # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
-    # nn_config = get_nn_config()
+    # nn_config = get_nn_config(False)
     # data = AirbnbCategoryImageDataset()
-    # data = AirbnbNightlyPriceImageDataset()
+    # # data = AirbnbNightlyPriceImageDataset()
 
     # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
     # batch_size = 64
@@ -951,10 +1008,10 @@ if __name__ == "__main__":
     # }
 
     # model = NNClassification(config=nn_config)
-    # model = NNRegression(config=nn_config)
+    # # model = NNRegression(config=nn_config)
 
     # model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
-    # model_metrics = evaluate_nn(model, data_loaders, nn_config)
+    # # model_metrics = evaluate_nn(model, data_loaders, nn_config)
 
     # print()
     # print(model_metrics)

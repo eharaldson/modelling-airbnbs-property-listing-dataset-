@@ -233,4 +233,4 @@ def early_stopping(validation_losses, stop_criteria = 200):
 
 - Compared to the previous classification task that was looking at a different label (Category) for the data set; this classification model was a lot better than the different sklearn models. The reason for this is likely due to the features available which include: beds, bathrooms, nightly price, and several different ratings. These features do not have enough predicting power for the category label which includes: treehouses, chalets, Amazing pools, offbeat, beachfront. However when predicting the number of bedrooms, features like the number of beds and bathrooms as well as nighlty price will have higher predicting powers.
 
-- One thing to note is that the dataset is very unbalanced with 1 bedroom being the label for 61% and 1 and 2 bedrooms together make up 84% of the dataset.
+- One thing to note is that the dataset is very unbalanced with 1 bedroom being the label for 61% and 1 and 2 bedrooms together make up 84% of the dataset.d

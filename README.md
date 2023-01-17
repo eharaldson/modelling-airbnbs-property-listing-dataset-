@@ -168,10 +168,30 @@ GradientBoostingClassifier(max_depth=1,
 - In the future I would like to look more at using a neural network for classification as well as a Naive Bayes classification model.
 
 ### Neural networks
+## Regression
 
 - To get familiar with neural networks, I have made functions so that I can pass in the hyperparameters for a neural network: epochs, learning rate, model depth and layer widths. With these configuration settings the code creates a neural network with the correpsonding layers (which are all linear in this case) and ReLU activations after each layer.
 
-- I created 16 different architectures for possible neural networks, ranging from a 2 layer architecture to a 5 layer architecture. In turn, each model was trained on the same train data and the root mean squared error and r^2 score were calculated for the train, validation and test set but only the validation rmse was used to compare the models.
+- From early testing of different architectures and hyperparameters it became clear that the Adam optimiser with a learning rate of 0.0001 worked a lot better than SGD in reducing the validation RMSEs.
+
+- To get an idea of which architectures to look at I decided to test architectures by adding a layer each time until the network was overfitting (showing that it is probably to complex) and reduced the number of layers by 2; to look at networks with around 7 layers and varying number of nodes in each layer. 
+
+- I created 8 different architectures for possible neural networks. In turn, each model was trained on the same train data and the root mean squared error and r^2 score were calculated for the train, validation and test set but only the validation rmse was used to compare the models.
+
+- In order to prevent overfitting when testing the different architectures I implemented a function to be able to conduct an early stop when the validation loss started to increase. The function works simply by checking if the current validation loss is above the average over the past x batch indices:
+
+```
+def early_stopping(validation_losses, stop_criteria = 200):
+    if len(validation_losses) > stop_criteria:
+        average = np.mean(validation_losses[-stop_criteria:])
+        if average < validation_losses[-1]:
+            print(average, validation_losses[-1])
+            return True
+        else:
+            return False
+    else:
+        return False
+```
 
 - The loss function used when training all the models was the mean squared error. The following is a tensorboard plot of the loss for all the runs:
 
@@ -181,15 +201,15 @@ GradientBoostingClassifier(max_depth=1,
 
 ![alt text](./readme_images/validation_loss_all.png)
 
-- The model with the best validation score was 4 layer network with the nodes at each hidden layer being: 16, 13, 8. A visualisation of the model architecture is seen below:
-
-![alt text](./readme_images/architecture_best.png)
+- The model with the best validation score was 7 layer network with the nodes at each hidden layer being: 128, 512, 128, 64, 32, 16.
 
 - The training and validation loss for this architecture is plotted below:
 
 ![alt text](./readme_images/loss_best.png)
 ![alt text](./readme_images/validation_loss_best.png)
 
-- The root mean squared error for this architecture was 86.39 for the validation set and 99.23 for the test set. The R^2 values were 0.412 and 0.487 respectively. 
+- The root mean squared error for this architecture was 91.17 for the validation set and 101.25 for the test set. The R^2 values were 0.416 and 0.097 respectively. 
 
 - Whilst this is an improvement on any regression model tested so far, it is still a bad model and would not be useful in a real setting. Seeing as no model has been able to predict the nightly price with any accuracy it may be that the features picked out for these calculations are not useful for this task and there should be some reworking done to select better features.
+
+## Classification

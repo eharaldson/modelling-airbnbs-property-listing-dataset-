@@ -559,6 +559,18 @@ def get_optimiser_from_name(model, name, lr):
     else:
         return torch.optim.SGD(params=model.parameters(), lr=lr)
 
+# Function that allows the neural networks to implement early stopping
+def early_stopping(validation_losses, stop_criteria = 200):
+    if len(validation_losses) > stop_criteria:
+        average = np.mean(validation_losses[-stop_criteria:])
+        if average < validation_losses[-1]:
+            print(average, validation_losses[-1])
+            return True
+        else:
+            return False
+    else:
+        return False
+
 # Function to train a neural network
 def train(model, dataloader, hyperparams, regression = True):
 
@@ -567,6 +579,9 @@ def train(model, dataloader, hyperparams, regression = True):
     writer = torch.utils.tensorboard.SummaryWriter()
 
     batch_index = 0
+
+    validation_losses = []
+    early_stop = False
 
     for epoch in range(hyperparams['epochs']):
         for batch in dataloader['train']:
@@ -586,16 +601,29 @@ def train(model, dataloader, hyperparams, regression = True):
             val_predictions = model(val_features)
             if regression == False:
                 val_loss = F.cross_entropy(val_predictions, val_labels)
+                validation_losses.append(val_loss.item())
             else:
                 val_loss = F.mse_loss(val_predictions, val_labels)
+                validation_losses.append(val_loss.item())
 
             writer.add_scalar(tag='Loss', scalar_value=loss.item(), global_step=batch_index)
             writer.add_scalar(tag='Validation Loss', scalar_value=val_loss.item(), global_step=batch_index)
             batch_index += 1
 
+            early_stop = early_stopping(validation_losses=validation_losses, stop_criteria=400)
+            if early_stop == True:
+                break
+        if early_stop == True:
+            break
+
 # Function that reads the nn config yaml file and returns a dictionary
-def get_nn_config():
-    with open("nn_config.yaml", "r") as f:
+def get_nn_config(regression = True):
+    if regression == True:
+        filename = "nn_config_regression.yaml"
+    else:
+        filename = "nn_config_classification.yaml"
+
+    with open(filename, "r") as f:
         try:
             return yaml.safe_load(f)
         except yaml.YAMLError as exc:
@@ -626,6 +654,7 @@ def evaluate_nn(model, data_loader, nn_config):
     test_rmse = metrics.mean_squared_error(y_test.numpy(), test_predictions.detach().numpy(), squared=False)
     test_r2 = metrics.r2_score(y_test.numpy(), test_predictions.detach().numpy())
 
+    print(model, validation_rmse)
 
     metrics_dictionary = {
         'RMSE_loss': {
@@ -711,120 +740,65 @@ def save_nn(model, hyperparams, metrics, regression=True):
 def generate_nn_configs():
 
     configs = []
+
+    epoch_total = 800
+
     configs.append({
-        'optimiser': 'SGD',
+        'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 20], [20, 1]],
-        'model_depth': 2,
-        'epochs': 10
+        'hidden_layer_width': [[11, 128], [128, 512], [512, 128], [128, 64], [64, 32], [32, 16], [16, 1]],
+        'model_depth': 7,
+        'epochs': epoch_total
+    })    
+    configs.append({
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 64], [64, 128], [128, 64], [64, 32], [32, 16], [16, 8], [8, 1]],
+        'model_depth': 7,
+        'epochs': epoch_total
     })
     configs.append({
-        'optimiser': 'SGD',
+        'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 20], [20, 1]],
-        'model_depth': 2,
-        'epochs': 20
-    })
+        'hidden_layer_width': [[11, 32], [32, 128], [128, 64], [64, 32], [32, 16], [16, 8], [8, 1]],
+        'model_depth': 7,
+        'epochs': epoch_total
+    })    
     configs.append({
-        'optimiser': 'SGD',
+        'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 5], [5, 1]],
-        'model_depth': 2,
-        'epochs': 10
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.0001,
-        'hidden_layer_width': [[11, 5], [5, 1]],
-        'model_depth': 2,
-        'epochs': 20
+        'hidden_layer_width': [[11, 16], [16, 32], [32, 16], [16, 8], [8, 4], [4, 1]],
+        'model_depth': 6,
+        'epochs': epoch_total
     })
 
     configs.append({
-        'optimiser': 'SGD',
+        'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 8], [8, 1]],
-        'model_depth': 2,
-        'epochs': 10
-    })
+        'hidden_layer_width': [[11, 64], [64, 256], [256, 128], [128, 32], [32, 16], [16, 1]],
+        'model_depth': 6,
+        'epochs': epoch_total
+    })    
     configs.append({
-        'optimiser': 'SGD',
+        'optimiser': 'Adam',
         'lr': 0.0001,
-        'hidden_layer_width': [[11, 8], [8, 1]],
-        'model_depth': 2,
-        'epochs': 20
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.0001,
-        'hidden_layer_width': [[11, 8], [8, 5], [5, 1]],
-        'model_depth': 3,
-        'epochs': 20
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.0001,
-        'hidden_layer_width': [[11, 13], [13, 8], [8, 1]],
-        'model_depth': 3,
-        'epochs': 20
-    })
-
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 22], [22, 11], [11, 1]],
-        'model_depth': 3,
-        'epochs': 75
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 28], [28, 21], [21, 1]],
-        'model_depth': 3,
-        'epochs': 75
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 28], [28, 5], [5, 1]],
-        'model_depth': 3,
-        'epochs': 75
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 13], [13, 8], [8, 3], [3, 1]],
+        'hidden_layer_width': [[11, 16], [16, 32], [32, 8], [8, 1]],
         'model_depth': 4,
-        'epochs': 75
+        'epochs': epoch_total
     })
-
     configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 16], [16, 13], [13, 8], [8, 1]],
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 32], [32, 64], [64, 16], [16, 1]],
         'model_depth': 4,
-        'epochs': 75
-    })
+        'epochs': epoch_total
+    })    
     configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 13], [13, 10], [10, 6], [6, 3], [3, 1]],
+        'optimiser': 'Adam',
+        'lr': 0.0001,
+        'hidden_layer_width': [[11, 64], [64, 128], [128, 64], [64, 16], [16, 1]],
         'model_depth': 5,
-        'epochs': 75
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 13], [13, 6], [6, 10], [10, 5], [5, 1]],
-        'model_depth': 5,
-        'epochs': 75
-    })
-    configs.append({
-        'optimiser': 'SGD',
-        'lr': 0.00001,
-        'hidden_layer_width': [[11, 16], [16, 11], [11, 7], [7, 3], [3, 1]],
-        'model_depth': 5,
-        'epochs': 75
+        'epochs': epoch_total
     })
 
     return configs
@@ -879,6 +853,7 @@ def find_best_nn():
 
     return best_model, best_config, best_metrics
 
+# Finds the best neural network model for classification
 def find_best_nn_classification():
     configs = generate_nn_configs()
 
@@ -937,44 +912,52 @@ if __name__ == "__main__":
     # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/classification/best_model')
     # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
-    nn_config = get_nn_config()
-    data = AirbnbCategoryImageDataset()
+    # best_model, best_config, best_metrics = find_best_nn()
 
-    train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
-    batch_size = 64
-    data_loaders = {
-        'train': torch.utils.data.DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'train_metrics': torch.utils.data.DataLoader(
-            train_data,
-            batch_size=len(train_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'validation': torch.utils.data.DataLoader(
-            validation_data,
-            batch_size=len(validation_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        ),
-        'test': torch.utils.data.DataLoader(
-            test_data,
-            batch_size=len(test_data),
-            shuffle=True,
-            pin_memory=torch.cuda.is_available(),
-        )
-    }
+    # folder_path = os.path.join(os.getcwd(), 'models/neural_networks/regression/best_model')
+    # save_model(folder=folder_path, model=best_model, model_hyperparameters=best_config, model_score_metrics=best_metrics)
 
-    model = NNClassification(config=nn_config)
+    # nn_config = get_nn_config()
+    # data = AirbnbCategoryImageDataset()
+    # data = AirbnbNightlyPriceImageDataset()
 
-    model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
+    # train_data, validation_data, test_data = random_split(data, [0.7, 0.15, 0.15])
+    # batch_size = 64
+    # data_loaders = {
+    #     'train': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=batch_size,
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'train_metrics': torch.utils.data.DataLoader(
+    #         train_data,
+    #         batch_size=len(train_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'validation': torch.utils.data.DataLoader(
+    #         validation_data,
+    #         batch_size=len(validation_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     ),
+    #     'test': torch.utils.data.DataLoader(
+    #         test_data,
+    #         batch_size=len(test_data),
+    #         shuffle=True,
+    #         pin_memory=torch.cuda.is_available(),
+    #     )
+    # }
 
-    print()
-    print(model_metrics)
-    print()
+    # model = NNClassification(config=nn_config)
+    # model = NNRegression(config=nn_config)
+
+    # model_metrics = evaluate_nn_classification(model, data_loaders, nn_config)
+    # model_metrics = evaluate_nn(model, data_loaders, nn_config)
+
+    # print()
+    # print(model_metrics)
+    # print()
 
     # save_nn(model, nn_config, model_metrics)

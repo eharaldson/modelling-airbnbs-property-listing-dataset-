@@ -1,5 +1,15 @@
 # Modelling airbnbs listings dataset
 
+In this project I was given access to a uncleaned dataset (listing.csv in the data/tabular_data folder). The task is therefore to perform exploratory data analysis, clean the data and process it and seperate features from labels in a structured way.
+
+I will then perform a regression task and classification task. For the regression, the features will include: number of beds, number of bedrooms, number of bathrooms, number of guests, Cleanliness_rating, Accuracy_rating, Communication_rating, Location_rating, Check-in_rating, Value_rating, amenities_count and the target variable is the nightly price for the Airbnb; therefore there are 11 features.
+
+In the classification task, the features will include: number of beds, number of bedrooms, number of bathrooms, number of guests, nightly price, Cleanliness_rating, Accuracy_rating, Communication_rating, Location_rating, Check-in_rating, Value_rating, amenities_count and the label is the Category of the listing (which is one of 5: Treehouse, Chalet, Amazing pools, offbeat, beachfront); therefore 12 features.
+
+First sklearn will be used to train and test a variety of machine learning models for each case and the best one will be picked after cross validation based on the validation root mean squared error (regression) and validation accuracy score (classification).
+
+Finally a configurable neural network will be created using PyTorch and a hyperparameter dictionary to be able to test different architectures for the regression case. Then the same process will be repeated for a classification case where the label is now the number of bedrooms and the category is included in the features (12 features).
+
 ## Data preparation
 ### Tabular data
 - In the tabular_data file I have created functions to clean the airbnb table data. The functions could be reused for similar tabular data. The tabular data has 988 samples and 20 columns as seen when using `df.info()`:
@@ -233,4 +243,4 @@ def early_stopping(validation_losses, stop_criteria = 200):
 
 - Compared to the previous classification task that was looking at a different label (Category) for the data set; this classification model was a lot better than the different sklearn models. The reason for this is likely due to the features available which include: beds, bathrooms, nightly price, and several different ratings. These features do not have enough predicting power for the category label which includes: treehouses, chalets, Amazing pools, offbeat, beachfront. However when predicting the number of bedrooms, features like the number of beds and bathrooms as well as nighlty price will have higher predicting powers.
 
-- One thing to note is that the dataset is very unbalanced with 1 bedroom being the label for 61% and 1 and 2 bedrooms together make up 84% of the dataset.d
+- One thing to note is that the dataset is very unbalanced with 1 bedroom being the label for 61% and 1 and 2 bedrooms together make up 84% of the dataset.
